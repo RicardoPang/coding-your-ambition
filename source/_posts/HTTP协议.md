@@ -1,6 +1,7 @@
 ---
 title: HTTP协议
 date: 2021-01-11 21:27:17
+description: HTTP（Hyper Text Transfer Protocol）超文本传输协议是用于从服务器传输超文本到客户端的传输协议，基于 TCP/IP 通信协议，遵循客户端-服务器端模型。
 tags: HTTP
 ---
 
@@ -57,8 +58,6 @@ Remote Address: 10.0.0.136:8090
 Host: 10.0.0.136:8090
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36
 ```
-
-   <!-- more -->
 
 - **HEAD** 与 GET 相同，但没有响应体。
 
