@@ -7,7 +7,7 @@ title: Coding Your Ambition
 subtitle: ''
 description: ''
 keywords:
-author: Ricardo Pang
+author: 黑白灰
 language: zh-CN
 timezone: 'Asia/Shanghai'
 
@@ -33,7 +33,7 @@ skip_render:
 
 search:
   path: search.xml
-  field: post
+  field: postß
   format: html
   limit: 10000
 
