@@ -1,3 +1,11 @@
+---
+layout: post
+title: 初始化项目
+description: 接下来，我们开始初始化项目，首先我们先去 GitHub 上创建一个 repo，填好 repo 名称，以及写一下 README，对项目先做个简单的描述。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 初始化项目
 
 ## 创建代码仓库
@@ -34,7 +42,7 @@ npm install
 
 ```
 ├── CONTRIBUTING.md
-├── LICENSE 
+├── LICENSE
 ├── README.md
 ├── code-of-conduct.md
 ├── node_modules
@@ -67,16 +75,16 @@ npm install
 
 `TypeScript library starter` 同样在 `package.json` 中帮我们配置了一些 `npm scripts`，接下来我们先列举一下我们开发中常用的 `npm scripts`，剩余的我们在之后学习中遇到的时候再来介绍。
 
- - `npm run lint`: 使用 TSLint 工具检查 `src` 和 `test` 目录下 TypeScript 代码的可读性、可维护性和功能性错误。
- - `npm start`: 观察者模式运行 `rollup` 工具打包代码。
- - `npm test`: 运行 `jest` 工具跑单元测试。
- - `npm run commit`: 运行 `commitizen` 工具提交格式化的 `git commit` 注释。
- - `npm run build`: 运行 `rollup` 编译打包 TypeScript 代码，并运行 `typedoc` 工具生成文档。
- 
+- `npm run lint`: 使用 TSLint 工具检查 `src` 和 `test` 目录下 TypeScript 代码的可读性、可维护性和功能性错误。
+- `npm start`: 观察者模式运行 `rollup` 工具打包代码。
+- `npm test`: 运行 `jest` 工具跑单元测试。
+- `npm run commit`: 运行 `commitizen` 工具提交格式化的 `git commit` 注释。
+- `npm run build`: 运行 `rollup` 编译打包 TypeScript 代码，并运行 `typedoc` 工具生成文档。
+
 ## 关联远程分支
- 
- 代码已经初始化好，接下来我们要把当前代码仓库关联我们的远程仓库，首先在命令行中运行命令查看远程分支：
- 
+
+代码已经初始化好，接下来我们要把当前代码仓库关联我们的远程仓库，首先在命令行中运行命令查看远程分支：
+
 ```bash
 git remote -v
 ```
@@ -114,9 +122,8 @@ Aborting
 git pull origin master
 ```
 
-这次代码就拉取成功了，并且在本地也创建了一个 `master` 分支。 
+这次代码就拉取成功了，并且在本地也创建了一个 `master` 分支。
 
- 
 ### 提交代码
 
 最后我们来提交代码，首先运行：
@@ -124,6 +131,7 @@ git pull origin master
 ```bash
 git add .
 ```
+
 把提交的代码从工作区添加到暂存区，然后运行 `npm run commit` 这个 `npm` 脚本来提交代码，运行后它会依次询问你几个问题，比如你这次修改的范围包括哪些、提交的描述、是否有 break change、影响了哪些 issue 等等。
 
 填写完毕，工具会帮我们运行 `git commit` 并且自动把我们提交的信息合成一条提交注释。接着运行命令把代码推送到远程 git 仓库中：
@@ -135,5 +143,3 @@ git push origin master
 接着我们去 GitHub 仓库中就可以看到刚才这条提交记录了。
 
 至此，我们项目已经初始化完毕，接下来我们就开始编写源码实现 axios 了。
-
-

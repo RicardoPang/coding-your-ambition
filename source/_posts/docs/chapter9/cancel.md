@@ -1,3 +1,11 @@
+---
+layout: post
+title: 取消功能的设计与实现
+description: 有些场景下，我们希望能主动取消请求，比如常见的搜索框案例，在用户输入过程中，搜索框的内容也在不断变化，正常情况每次变化我们都应该向服务端发送一次请求。但是当用户输入过快的时候，我们不希望每次变化请求都发出去，通常一个解决方案是前端用 debounce 的方案，比如延时 200ms 发送请求。这样当用户连续输入的字符，只要输入间隔小于 200ms，前面输入的字符都不会发请求。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 取消功能的设计与实现
 
 ## 需求分析
@@ -12,15 +20,17 @@
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
 
-axios.get('/user/12345', {
-  cancelToken: source.token
-}).catch(function (e) {
-  if (axios.isCancel(e)) {
-    console.log('Request canceled', e.message);
-  } else {
-    // 处理错误
-  }
-});
+axios
+  .get('/user/12345', {
+    cancelToken: source.token,
+  })
+  .catch(function (e) {
+    if (axios.isCancel(e)) {
+      console.log('Request canceled', e.message);
+    } else {
+      // 处理错误
+    }
+  });
 
 // 取消请求 (请求原因是可选的)
 source.cancel('Operation canceled by the user.');
@@ -30,14 +40,14 @@ source.cancel('Operation canceled by the user.');
 
 我们还支持另一种方式的调用：
 
-``` typescript
+```typescript
 const CancelToken = axios.CancelToken;
 let cancel;
 
 axios.get('/user/12345', {
   cancelToken: new CancelToken(function executor(c) {
     cancel = c;
-  })
+  }),
 });
 
 // 取消请求
@@ -57,13 +67,11 @@ cancel();
 我们可以利用 Promise 实现异步分离，也就是在 `cancelToken` 中保存一个 `pending` 状态的 Promise 对象，然后当我们执行 `cancel` 方法的时候，能够访问到这个 Promise 对象，把它从 `pending` 状态变成 `resolved` 状态，这样我们就可以在 `then` 函数中去实现取消请求的逻辑，类似如下的代码：
 
 ```typescript
-
 if (cancelToken) {
-  cancelToken.promise
-    .then(reason => {
-      request.abort()
-      reject(reason)
-    })
+  cancelToken.promise.then((reason) => {
+    request.abort();
+    reject(reason);
+  });
 }
 ```
 
@@ -78,22 +86,21 @@ if (cancelToken) {
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  cancelToken?: CancelToken
+  cancelToken?: CancelToken;
 }
 
 export interface CancelToken {
-  promise: Promise<string>
-  reason?: string
+  promise: Promise<string>;
+  reason?: string;
 }
 
 export interface Canceler {
-  (message?: string): void
+  (message?: string): void;
 }
 
 export interface CancelExecutor {
-  (cancel: Canceler): void
+  (cancel: Canceler): void;
 }
-
 ```
 
 其中 `CancelToken` 是实例类型的接口定义，`Canceler` 是取消方法的接口定义，`CancelExecutor` 是 `CancelToken` 类构造函数参数的接口定义。
@@ -103,32 +110,33 @@ export interface CancelExecutor {
 我们单独创建 `cancel` 目录来管理取消相关的代码，在 `cancel` 目录下创建 `CancelToken.ts` 文件：
 
 ```typescript
-import { CancelExecutor } from '../types'
+import { CancelExecutor } from '../types';
 
 interface ResolvePromise {
-  (reason?: string): void
+  (reason?: string): void;
 }
 
 export default class CancelToken {
-  promise: Promise<string>
-  reason?: string
+  promise: Promise<string>;
+  reason?: string;
 
   constructor(executor: CancelExecutor) {
-    let resolvePromise: ResolvePromise
-    this.promise = new Promise<string>(resolve => {
-      resolvePromise = resolve
-    })
+    let resolvePromise: ResolvePromise;
+    this.promise = new Promise<string>((resolve) => {
+      resolvePromise = resolve;
+    });
 
-    executor(message => {
+    executor((message) => {
       if (this.reason) {
-        return
+        return;
       }
-      this.reason = message
-      resolvePromise(this.reason)
-    })
+      this.reason = message;
+      resolvePromise(this.reason);
+    });
   }
 }
 ```
+
 在 `CancelToken` 构造函数内部，实例化一个 `pending` 状态的 Promise 对象，然后用一个 `resolvePromise` 变量指向 `resolve` 函数。接着执行 `executor` 函数，传入一个 `cancel` 函数，在 `cancel` 函数内部，会调用 `resolvePromise` 把 Promise 对象从 `pending` 状态变为 `resolved` 状态。
 
 接着我们在 `xhr.ts` 中插入一段取消请求的逻辑。
@@ -136,13 +144,13 @@ export default class CancelToken {
 `core/xhr.ts`：
 
 ```typescript
-const { /*....*/ cancelToken } = config
+const { /*....*/ cancelToken } = config;
 
 if (cancelToken) {
-  cancelToken.promise.then(reason => {
-    request.abort()
-    reject(reason)
-  })
+  cancelToken.promise.then((reason) => {
+    request.abort();
+    reject(reason);
+  });
 }
 ```
 
@@ -156,14 +164,14 @@ if (cancelToken) {
 
 ```typescript
 export interface CancelTokenSource {
-  token: CancelToken
-  cancel: Canceler
+  token: CancelToken;
+  cancel: Canceler;
 }
 
 export interface CancelTokenStatic {
-  new(executor: CancelExecutor): CancelToken
+  new (executor: CancelExecutor): CancelToken;
 
-  source(): CancelTokenSource
+  source(): CancelTokenSource;
 }
 ```
 
@@ -178,14 +186,14 @@ export default class CancelToken {
   // ...
 
   static source(): CancelTokenSource {
-    let cancel!: Canceler
-    const token = new CancelToken(c => {
-      cancel = c
-    })
+    let cancel!: Canceler;
+    const token = new CancelToken((c) => {
+      cancel = c;
+    });
     return {
       cancel,
-      token
-    }
+      token,
+    };
   }
 }
 ```
@@ -200,19 +208,19 @@ export default class CancelToken {
 
 ```typescript
 export interface Cancel {
-  message?: string
+  message?: string;
 }
 
 export interface CancelStatic {
-  new(message?: string): Cancel
+  new (message?: string): Cancel;
 }
 
 export interface AxiosStatic extends AxiosInstance {
-  create(config?: AxiosRequestConfig): AxiosInstance
+  create(config?: AxiosRequestConfig): AxiosInstance;
 
-  CancelToken: CancelTokenStatic
-  Cancel: CancelStatic
-  isCancel: (value: any) => boolean
+  CancelToken: CancelTokenStatic;
+  Cancel: CancelStatic;
+  isCancel: (value: any) => boolean;
 }
 ```
 
@@ -224,15 +232,15 @@ export interface AxiosStatic extends AxiosInstance {
 
 ```typescript
 export default class Cancel {
-  message?: string
+  message?: string;
 
   constructor(message?: string) {
-    this.message = message
+    this.message = message;
   }
 }
 
 export function isCancel(value: any): boolean {
-  return value instanceof Cancel
+  return value instanceof Cancel;
 }
 ```
 
@@ -246,37 +254,37 @@ export function isCancel(value: any): boolean {
 
 ```typescript
 export interface CancelToken {
-  promise: Promise<Cancel>
-  reason?: Cancel
+  promise: Promise<Cancel>;
+  reason?: Cancel;
 }
 ```
 
 再修改实现部分：
 
 ```typescript
-import Cancel from './Cancel'
+import Cancel from './Cancel';
 
 interface ResolvePromise {
-  (reason?: Cancel): void
+  (reason?: Cancel): void;
 }
 
 export default class CancelToken {
-  promise: Promise<Cancel>
-  reason?: Cancel
+  promise: Promise<Cancel>;
+  reason?: Cancel;
 
   constructor(executor: CancelExecutor) {
-    let resolvePromise: ResolvePromise
-    this.promise = new Promise<Cancel>(resolve => {
-      resolvePromise = resolve
-    })
+    let resolvePromise: ResolvePromise;
+    this.promise = new Promise<Cancel>((resolve) => {
+      resolvePromise = resolve;
+    });
 
-    executor(message => {
+    executor((message) => {
       if (this.reason) {
-        return
+        return;
       }
-      this.reason = new Cancel(message)
-      resolvePromise(this.reason)
-    })
+      this.reason = new Cancel(message);
+      resolvePromise(this.reason);
+    });
   }
 }
 ```
@@ -286,12 +294,12 @@ export default class CancelToken {
 `axios.ts`：
 
 ```typescript
-import CancelToken from './cancel/CancelToken'
-import Cancel, { isCancel } from './cancel/Cancel'
+import CancelToken from './cancel/CancelToken';
+import Cancel, { isCancel } from './cancel/Cancel';
 
-axios.CancelToken = CancelToken
-axios.Cancel = Cancel
-axios.isCancel = isCancel
+axios.CancelToken = CancelToken;
+axios.Cancel = Cancel;
+axios.isCancel = isCancel;
 ```
 
 ## 额外逻辑实现
@@ -304,10 +312,10 @@ axios.isCancel = isCancel
 
 ```typescript
 export interface CancelToken {
-  promise: Promise<Cancel>
-  reason?: Cancel
+  promise: Promise<Cancel>;
+  reason?: Cancel;
 
-  throwIfRequested(): void
+  throwIfRequested(): void;
 }
 ```
 
@@ -321,7 +329,7 @@ export default class CancelToken {
 
   throwIfRequested(): void {
     if (this.reason) {
-      throw this.reason
+      throw this.reason;
     }
   }
 }
@@ -334,16 +342,18 @@ export default class CancelToken {
 `core/dispatchRequest.ts`：
 
 ```typescript
-export default function dispatchRequest(config: AxiosRequestConfig): AxiosPromise {
-  throwIfCancellationRequested(config)
-  processConfig(config)
+export default function dispatchRequest(
+  config: AxiosRequestConfig
+): AxiosPromise {
+  throwIfCancellationRequested(config);
+  processConfig(config);
 
   // ...
 }
 
 function throwIfCancellationRequested(config: AxiosRequestConfig): void {
   if (config.cancelToken) {
-    config.cancelToken.throwIfRequested()
+    config.cancelToken.throwIfRequested();
   }
 }
 ```
@@ -358,7 +368,7 @@ function throwIfCancellationRequested(config: AxiosRequestConfig): void {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Cancel example</title>
   </head>
   <body>
@@ -370,53 +380,52 @@ function throwIfCancellationRequested(config: AxiosRequestConfig): void {
 接着创建 `app.ts` 作为入口文件：
 
 ```typescript
-import axios, { Canceler } from '../../src/index'
+import axios, { Canceler } from '../../src/index';
 
-const CancelToken = axios.CancelToken
-const source = CancelToken.source()
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
 
-axios.get('/cancel/get', {
-  cancelToken: source.token
-}).catch(function(e) {
-  if (axios.isCancel(e)) {
-    console.log('Request canceled', e.message)
-  }
-})
-
-setTimeout(() => {
-  source.cancel('Operation canceled by the user.')
-
-  axios.post('/cancel/post', { a: 1 }, { cancelToken: source.token }).catch(function(e) {
+axios
+  .get('/cancel/get', {
+    cancelToken: source.token,
+  })
+  .catch(function (e) {
     if (axios.isCancel(e)) {
-      console.log(e.message)
+      console.log('Request canceled', e.message);
     }
-  })
-}, 100)
-
-let cancel: Canceler
-
-axios.get('/cancel/get', {
-  cancelToken: new CancelToken(c => {
-    cancel = c
-  })
-}).catch(function(e) {
-  if (axios.isCancel(e)) {
-    console.log('Request canceled')
-  }
-})
+  });
 
 setTimeout(() => {
-  cancel()
-}, 200)
+  source.cancel('Operation canceled by the user.');
+
+  axios
+    .post('/cancel/post', { a: 1 }, { cancelToken: source.token })
+    .catch(function (e) {
+      if (axios.isCancel(e)) {
+        console.log(e.message);
+      }
+    });
+}, 100);
+
+let cancel: Canceler;
+
+axios
+  .get('/cancel/get', {
+    cancelToken: new CancelToken((c) => {
+      cancel = c;
+    }),
+  })
+  .catch(function (e) {
+    if (axios.isCancel(e)) {
+      console.log('Request canceled');
+    }
+  });
+
+setTimeout(() => {
+  cancel();
+}, 200);
 ```
 
 我们的 demo 展示了 2 种使用方式，也演示了如果一个 token 已经被使用过，则再次携带该 token 的请求并不会发送。
 
 至此，我们完成了 `ts-axios` 的请求取消功能，我们巧妙地利用了 Promise 实现了异步分离。目前官方 `axios` 库的一些大的 feature 我们都已经实现了，下面的章节我们就开始补充完善 `ts-axios` 的其它功能。
-
-
-
-
-
-
-

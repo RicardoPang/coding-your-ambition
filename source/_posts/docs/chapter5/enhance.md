@@ -1,3 +1,11 @@
+---
+layout: post
+title: 错误信息增强
+description: 上一节课我们已经捕获了几类 AJAX 的错误，但是对于错误信息提供的非常有限，我们希望对外提供的信息不仅仅包含错误文本信息，还包括了请求对象配置 `config`，错误代码 `code`，`XMLHttpRequest` 对象实例 `request`以及自定义响应对象 `response`。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 错误信息增强
 
 ## 需求分析
@@ -8,14 +16,16 @@
 axios({
   method: 'get',
   url: '/error/timeout',
-  timeout: 2000
-}).then((res) => {
-  console.log(res)
-}).catch((e: AxiosError) => {
-  console.log(e.message)
-  console.log(e.request)
-  console.log(e.code)
+  timeout: 2000,
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e: AxiosError) => {
+    console.log(e.message);
+    console.log(e.request);
+    console.log(e.code);
+  });
 ```
 
 这样对于应用方来说，他们就可以捕获到这些错误的详细信息，做进一步的处理。
@@ -30,11 +40,11 @@ axios({
 
 ```typescript
 export interface AxiosError extends Error {
-  config: AxiosRequestConfig
-  code?: string
-  request?: any
-  response?: AxiosResponse
-  isAxiosError: boolean
+  config: AxiosRequestConfig;
+  code?: string;
+  request?: any;
+  response?: AxiosResponse;
+  isAxiosError: boolean;
 }
 ```
 
@@ -43,14 +53,14 @@ export interface AxiosError extends Error {
 `helpers/error.ts`：
 
 ```typescript
-import { AxiosRequestConfig, AxiosResponse } from '../types'
+import { AxiosRequestConfig, AxiosResponse } from '../types';
 
 export class AxiosError extends Error {
-  isAxiosError: boolean
-  config: AxiosRequestConfig
-  code?: string | null
-  request?: any
-  response?: AxiosResponse
+  isAxiosError: boolean;
+  config: AxiosRequestConfig;
+  code?: string | null;
+  request?: any;
+  response?: AxiosResponse;
 
   constructor(
     message: string,
@@ -59,15 +69,15 @@ export class AxiosError extends Error {
     request?: any,
     response?: AxiosResponse
   ) {
-    super(message)
+    super(message);
 
-    this.config = config
-    this.code = code
-    this.request = request
-    this.response = response
-    this.isAxiosError = true
+    this.config = config;
+    this.code = code;
+    this.request = request;
+    this.response = response;
+    this.isAxiosError = true;
 
-    Object.setPrototypeOf(this, AxiosError.prototype)
+    Object.setPrototypeOf(this, AxiosError.prototype);
   }
 }
 
@@ -78,9 +88,9 @@ export function createError(
   request?: any,
   response?: AxiosResponse
 ): AxiosError {
-  const error = new AxiosError(message, config, code, request, response)
+  const error = new AxiosError(message, config, code, request, response);
 
-  return error
+  return error;
 }
 ```
 
@@ -95,37 +105,36 @@ export function createError(
 `xhr.ts`：
 
 ```typescript
-import { createError } from './helpers/error'
+import { createError } from './helpers/error';
 
 request.onerror = function handleError() {
-  reject(createError(
-    'Network Error',
-    config,
-    null,
-    request
-  ))
-}
+  reject(createError('Network Error', config, null, request));
+};
 
 request.ontimeout = function handleTimeout() {
-  reject(createError(
-    `Timeout of ${config.timeout} ms exceeded`,
-    config,
-    'ECONNABORTED',
-    request
-  ))
-}
+  reject(
+    createError(
+      `Timeout of ${config.timeout} ms exceeded`,
+      config,
+      'ECONNABORTED',
+      request
+    )
+  );
+};
 
 function handleResponse(response: AxiosResponse) {
   if (response.status >= 200 && response.status < 300) {
-    resolve(response)
+    resolve(response);
   } else {
-    reject(createError(
-      `Request failed with status code ${response.status}`,
-      config,
-      null,
-      request,
-      response
-    ))
+    reject(
+      createError(
+        `Request failed with status code ${response.status}`,
+        config,
+        null,
+        request,
+        response
+      )
+    );
   }
 }
 ```
@@ -139,11 +148,11 @@ function handleResponse(response: AxiosResponse) {
 `index.ts`：
 
 ```typescript
-import axios from './axios'
+import axios from './axios';
 
-export * from './types'
+export * from './types';
 
-export default axios
+export default axios;
 ```
 
 这样我们在 demo 中就可以引入 `AxiosError` 类型了。
@@ -151,18 +160,20 @@ export default axios
 `examples/error/app.ts`：
 
 ```typescript
-import axios, { AxiosError } from '../../src/index'
+import axios, { AxiosError } from '../../src/index';
 
 axios({
   method: 'get',
   url: '/error/timeout',
-  timeout: 2000
-}).then((res) => {
-  console.log(res)
-}).catch((e: AxiosError) => {
-  console.log(e.message)
-  console.log(e.code)
+  timeout: 2000,
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e: AxiosError) => {
+    console.log(e.message);
+    console.log(e.code);
+  });
 ```
 
 至此，我们关于 `ts-axios` 的异常处理逻辑就告一段落。下面的章节，我们会对 `ts-axios` 的接口做扩展，让它提供更多好用和方便的 API。

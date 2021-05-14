@@ -1,3 +1,11 @@
+---
+layout: post
+title: baseURL
+description: 有些时候，我们会请求某个域名下的多个接口，我们不希望每次发送请求都填写完整的 url，希望可以配置一个 `baseURL`，之后都可以传相对路径。如下：
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # baseURL
 
 ## 需求分析
@@ -6,12 +14,12 @@
 
 ```typescript
 const instance = axios.create({
-  baseURL: 'https://some-domain.com/api'
-})
+  baseURL: 'https://some-domain.com/api',
+});
 
-instance.get('/get')
+instance.get('/get');
 
-instance.post('/post')
+instance.post('/post');
 ```
 
 我们一旦配置了 `baseURL`，之后请求传入的 `url` 都会和我们的 `baseURL` 拼接成完整的绝对地址，除非请求传入的 `url` 已经是绝对地址。
@@ -25,7 +33,7 @@ instance.post('/post')
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  baseURL?: string
+  baseURL?: string;
 }
 ```
 
@@ -35,11 +43,13 @@ export interface AxiosRequestConfig {
 
 ```typescript
 export function isAbsoluteURL(url: string): boolean {
-  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url)
+  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 }
 
 export function combineURL(baseURL: string, relativeURL?: string): string {
-  return relativeURL ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '') : baseURL
+  return relativeURL
+    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    : baseURL;
 }
 ```
 
@@ -49,11 +59,11 @@ export function combineURL(baseURL: string, relativeURL?: string): string {
 
 ```typescript
 function transformURL(config: AxiosRequestConfig): string {
-  let { url, params, paramsSerializer, baseURL } = config
+  let { url, params, paramsSerializer, baseURL } = config;
   if (baseURL && !isAbsoluteURL(url!)) {
-    url = combineURL(baseURL, url)
+    url = combineURL(baseURL, url);
   }
-  return buildURL(url!, params, paramsSerializer)
+  return buildURL(url!, params, paramsSerializer);
 }
 ```
 
@@ -61,12 +71,14 @@ function transformURL(config: AxiosRequestConfig): string {
 
 ```typescript
 const instance = axios.create({
-  baseURL: 'https://img.mukewang.com/'
-})
+  baseURL: 'https://img.mukewang.com/',
+});
 
-instance.get('5cc01a7b0001a33718720632.jpg')
+instance.get('5cc01a7b0001a33718720632.jpg');
 
-instance.get('https://img.mukewang.com/szimg/5becd5ad0001b89306000338-360-202.jpg')
+instance.get(
+  'https://img.mukewang.com/szimg/5becd5ad0001b89306000338-360-202.jpg'
+);
 ```
 
 这个 demo 非常简单，我们请求了慕课网的 2 张图片，注意当第二个请求 `url` 已经是绝对地址的时候，我们并不会再去拼接 `baseURL`。

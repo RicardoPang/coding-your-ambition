@@ -1,10 +1,18 @@
+---
+layout: post
+title: 请求和响应配置化
+description: 官方的 axios 库 给默认配置添加了 `transformRequest` 和 `transformResponse` 两个字段，它们的值是一个数组或者是一个函数。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 请求和响应配置化
 
 ## 需求分析
 
 官方的 axios 库 给默认配置添加了 `transformRequest` 和 `transformResponse` 两个字段，它们的值是一个数组或者是一个函数。
 
-其中 `transformRequest` 允许你在将请求数据发送到服务器之前对其进行修改，这只适用于请求方法 `put`、`post` 和 `patch`，如果值是数组，则数组中的最后一个函数必须返回一个字符串或 `FormData`、`URLSearchParams`、`Blob` 等类型作为 `xhr.send` 方法的参数，而且在 `transform` 过程中可以修改  `headers` 对象。
+其中 `transformRequest` 允许你在将请求数据发送到服务器之前对其进行修改，这只适用于请求方法 `put`、`post` 和 `patch`，如果值是数组，则数组中的最后一个函数必须返回一个字符串或 `FormData`、`URLSearchParams`、`Blob` 等类型作为 `xhr.send` 方法的参数，而且在 `transform` 过程中可以修改 `headers` 对象。
 
 而 `transformResponse` 允许你在把响应数据传递给 `then` 或者 `catch` 之前对它们进行修改。
 
@@ -14,21 +22,27 @@
 
 ```typescript
 axios({
-  transformRequest: [(function(data) {
-    return qs.stringify(data)
-  }), ...axios.defaults.transformRequest],
-  transformResponse: [axios.defaults.transformResponse, function(data) {
-    if (typeof data === 'object') {
-      data.b = 2
-    }
-    return data
-  }],
+  transformRequest: [
+    function (data) {
+      return qs.stringify(data);
+    },
+    ...axios.defaults.transformRequest,
+  ],
+  transformResponse: [
+    axios.defaults.transformResponse,
+    function (data) {
+      if (typeof data === 'object') {
+        data.b = 2;
+      }
+      return data;
+    },
+  ],
   url: '/config/post',
   method: 'post',
   data: {
-    a: 1
-  }
-})
+    a: 1,
+  },
+});
 ```
 
 ## 修改默认配置
@@ -40,12 +54,12 @@ axios({
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  transformRequest?: AxiosTransformer | AxiosTransformer[]
-  transformResponse?: AxiosTransformer | AxiosTransformer[]
+  transformRequest?: AxiosTransformer | AxiosTransformer[];
+  transformResponse?: AxiosTransformer | AxiosTransformer[];
 }
 
 export interface AxiosTransformer {
-  (data: any, headers?: any): any
+  (data: any, headers?: any): any;
 }
 ```
 
@@ -54,24 +68,24 @@ export interface AxiosTransformer {
 `defaults.ts`：
 
 ```typescript
-import { processHeaders } from './helpers/headers'
-import { transformRequest, transformResponse } from './helpers/data'
+import { processHeaders } from './helpers/headers';
+import { transformRequest, transformResponse } from './helpers/data';
 
 const defaults: AxiosRequestConfig = {
   // ...
   transformRequest: [
-    function(data: any, headers: any): any {
-      processHeaders(headers, data)
-      return transformRequest(data)
-    }
+    function (data: any, headers: any): any {
+      processHeaders(headers, data);
+      return transformRequest(data);
+    },
   ],
 
   transformResponse: [
-    function(data: any): any {
-      return transformResponse(data)
-    }
-  ]
-}
+    function (data: any): any {
+      return transformResponse(data);
+    },
+  ],
+};
 ```
 
 我们把之前对请求数据和响应数据的处理逻辑，放到了默认配置中，也就是默认处理逻辑。
@@ -83,7 +97,7 @@ const defaults: AxiosRequestConfig = {
 `core/transform.ts`
 
 ```typescript
-import { AxiosTransformer } from '../types'
+import { AxiosTransformer } from '../types';
 
 export default function transform(
   data: any,
@@ -91,15 +105,15 @@ export default function transform(
   fns?: AxiosTransformer | AxiosTransformer[]
 ): any {
   if (!fns) {
-    return data
+    return data;
   }
   if (!Array.isArray(fns)) {
-    fns = [fns]
+    fns = [fns];
   }
-  fns.forEach(fn => {
-    data = fn(data, headers)
-  })
-  return data
+  fns.forEach((fn) => {
+    data = fn(data, headers);
+  });
+  return data;
 }
 ```
 
@@ -110,18 +124,17 @@ export default function transform(
 `dispatchRequest.ts`：
 
 ```typescript
-
-import transform from './transform'
+import transform from './transform';
 
 function processConfig(config: AxiosRequestConfig): void {
-  config.url = transformURL(config)
-  config.data = transform(config.data, config.headers, config.transformRequest)
-  config.headers = flattenHeaders(config.headers, config.method!)
+  config.url = transformURL(config);
+  config.data = transform(config.data, config.headers, config.transformRequest);
+  config.headers = flattenHeaders(config.headers, config.method!);
 }
 
 function transformResponseData(res: AxiosResponse): AxiosResponse {
-  res.data = transform(res.data, res.headers, res.config.transformResponse)
-  return res
+  res.data = transform(res.data, res.headers, res.config.transformResponse);
+  return res;
 }
 ```
 
@@ -131,23 +144,29 @@ function transformResponseData(res: AxiosResponse): AxiosResponse {
 
 ```typescript
 axios({
-  transformRequest: [(function(data) {
-    return qs.stringify(data)
-  }), ...(axios.defaults.transformRequest as AxiosTransformer[])],
-  transformResponse: [...(axios.defaults.transformResponse as AxiosTransformer[]), function(data) {
-    if (typeof data === 'object') {
-      data.b = 2
-    }
-    return data
-  }],
+  transformRequest: [
+    function (data) {
+      return qs.stringify(data);
+    },
+    ...(axios.defaults.transformRequest as AxiosTransformer[]),
+  ],
+  transformResponse: [
+    ...(axios.defaults.transformResponse as AxiosTransformer[]),
+    function (data) {
+      if (typeof data === 'object') {
+        data.b = 2;
+      }
+      return data;
+    },
+  ],
   url: '/config/post',
   method: 'post',
   data: {
-    a: 1
-  }
+    a: 1,
+  },
 }).then((res) => {
-  console.log(res.data)
-})
+  console.log(res.data);
+});
 ```
 
 我们对 `transformRequest` 做了修改，在执行它默认的 `transformRequest` 之前，我们先用 `qs.stringify` 库对传入的数据 `data` 做了一层转换。同时也对 `transformResponse` 做了修改，在执行完默认的 `transformResponse` 后，会给响应的 `data` 对象添加一个 `data.b = 2`。
@@ -155,4 +174,3 @@ axios({
 因为之前我们实现了配置的合并，而且我们传入的 `transformRequest` 和 `transformResponse` 遵循默认合并策略，它们会覆盖默认的值。
 
 至此，我们就实现了请求和响应的配置化。到目前为止，我们的 axios 都是一个单例，一旦我们修改了 axios 的默认配置，会影响所有的请求。官网提供了一个 `axios.create` 的工厂方法允许我们创建一个新的 `axios` 实例，同时允许我们传入新的配置和默认配置合并，并做为新的默认配置。下面一节课我们就来实现这个 feature。
-

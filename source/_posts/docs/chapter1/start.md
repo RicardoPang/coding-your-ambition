@@ -1,16 +1,23 @@
+---
+layout: post
+title: 安装 TypeScript
+description: 安装 TypeScript。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 编写第一个 TypeScript 程序
 
 在编辑器，将下面的代码输入到 greeter.ts 文件里：
 
-
 ```javascript
-function greeter (person) {
-  return 'Hello, ' + person
+function greeter(person) {
+  return 'Hello, ' + person;
 }
 
-let user = 'Yee'
+let user = 'Yee';
 
-console.log(greeter(user))
+console.log(greeter(user));
 ```
 
 ## 编译代码
@@ -39,28 +46,28 @@ Hello, Yee
 
 ## 类型注解
 
-接下来让我们看看 TypeScript 工具带来的高级功能。 给  `person` 函数的参数添加 `: string` 类型注解，如下：
+接下来让我们看看 TypeScript 工具带来的高级功能。 给 `person` 函数的参数添加 `: string` 类型注解，如下：
 
 ```typescript
-function greeter (person: string) {
-  return 'Hello, ' + person
+function greeter(person: string) {
+  return 'Hello, ' + person;
 }
 
-let user = 'Yee'
+let user = 'Yee';
 
-console.log(greeter(user))
+console.log(greeter(user));
 ```
 
 TypeScript 里的类型注解是一种轻量级的为函数或变量添加约束的方式。 在这个例子里，我们希望 `greeter` 函数接收一个字符串参数。 然后尝试把 `greeter` 的调用改成传入一个数组：
 
 ```typescript
-function greeter (person: string) {
-  return 'Hello, ' + person
+function greeter(person: string) {
+  return 'Hello, ' + person;
 }
 
-let user = [0, 1, 2]
+let user = [0, 1, 2];
 
-console.log(greeter(user))
+console.log(greeter(user));
 ```
 
 重新编译，你会看到产生了一个错误：
@@ -69,7 +76,7 @@ console.log(greeter(user))
 error TS2345: Argument of type 'number[]' is not assignable to parameter of type 'string'.
 ```
 
-类似地，尝试删除 `greeter` 调用的所有参数。 TypeScript 会告诉你使用了非期望个数的参数调用了这个函数。 在这两种情况中，TypeScript提供了静态的代码分析，它可以分析代码结构和提供的类型注解。
+类似地，尝试删除 `greeter` 调用的所有参数。 TypeScript 会告诉你使用了非期望个数的参数调用了这个函数。 在这两种情况中，TypeScript 提供了静态的代码分析，它可以分析代码结构和提供的类型注解。
 
 要注意的是尽管有错误，`greeter.js` 文件还是被创建了。 就算你的代码里有错误，你仍然可以使用 TypeScript。但在这种情况下，TypeScript 会警告你代码可能不会按预期执行。
 
@@ -79,20 +86,20 @@ error TS2345: Argument of type 'number[]' is not assignable to parameter of type
 
 ```typescript
 interface Person {
-  firstName: string
-  lastName: string
+  firstName: string;
+  lastName: string;
 }
 
-function greeter (person: Person) {
-  return 'Hello, ' + person.firstName + ' ' + person.lastName
+function greeter(person: Person) {
+  return 'Hello, ' + person.firstName + ' ' + person.lastName;
 }
 
 let user = {
   firstName: 'Yee',
-  lastName: 'Huang'
-}
+  lastName: 'Huang',
+};
 
-console.log(greeter(user))
+console.log(greeter(user));
 ```
 
 ## 类
@@ -105,29 +112,29 @@ console.log(greeter(user))
 
 ```typescript
 class User {
-  fullName: string
-  firstName: string
-  lastName: string
+  fullName: string;
+  firstName: string;
+  lastName: string;
 
-  constructor (firstName: string, lastName: string) {
-    this.firstName = firstName
-    this.lastName = lastName
-    this.fullName = firstName + ' ' + lastName
+  constructor(firstName: string, lastName: string) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.fullName = firstName + ' ' + lastName;
   }
 }
 
 interface Person {
-  firstName: string
-  lastName: string
+  firstName: string;
+  lastName: string;
 }
 
-function greeter (person: Person) {
-  return 'Hello, ' + person.firstName + ' ' + person.lastName
+function greeter(person: Person) {
+  return 'Hello, ' + person.firstName + ' ' + person.lastName;
 }
 
-let user = new User('Yee', 'Huang')
+let user = new User('Yee', 'Huang');
 
-console.log(greeter(user))
+console.log(greeter(user));
 ```
 
 重新运行 `tsc greeter.ts`，你会看到 TypeScript 里的类只是一个语法糖，本质上还是 `JavaScript` 函数的实现。
@@ -135,7 +142,3 @@ console.log(greeter(user))
 ## 总结
 
 到这里，你已经对 TypeScript 有了一个大致的印象，那么下一章让我们来一起学习 TypeScript 的一些常用语法吧。
-
-
-
-

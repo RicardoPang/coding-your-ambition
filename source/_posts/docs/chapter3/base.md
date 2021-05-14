@@ -1,3 +1,11 @@
+---
+layout: post
+title: 编写基础请求代码
+description: 我们这节课开始编写 `ts-axios` 库，我们的目标是实现简单的发送请求功能，即客户端通过 `XMLHttpRequest` 对象把请求发送到 server 端，server 端能收到请求并响应即可。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 编写基础请求代码
 
 我们这节课开始编写 `ts-axios` 库，我们的目标是实现简单的发送请求功能，即客户端通过 `XMLHttpRequest` 对象把请求发送到 server 端，server 端能收到请求并响应即可。
@@ -10,9 +18,9 @@ axios({
   url: '/simple/get',
   params: {
     a: 1,
-    b: 2
-  }
-})
+    b: 2,
+  },
+});
 ```
 
 ## 创建入口文件
@@ -20,13 +28,9 @@ axios({
 我们删除 `src` 目录下的文件，先创建一个 `index.ts` 文件，作为整个库的入口文件，然后我们先定义一个 `axios` 方法，并把它导出，如下：
 
 ```typescript
+function axios(config) {}
 
-function axios(config) {
-
-}
-
-export default axios
-
+export default axios;
 ```
 
 这里 TypeScript 编译器会检查到错误，分别是 `config` 的声明上有隐含的 `any` 报错，以及代码块为空。代码块为空我们比较好理解，第一个错误的原因是因为我们给 TypeScript 编译配置的 `strict` 设置为 `true` 导致。
@@ -49,10 +53,10 @@ export default axios
 
 ```typescript
 export interface AxiosRequestConfig {
-  url: string
-  method?: string
-  data?: any
-  params?: any
+  url: string;
+  method?: string;
+  data?: any;
+  params?: any;
 }
 ```
 
@@ -61,35 +65,42 @@ export interface AxiosRequestConfig {
 为了让 `method` 只能传入合法的字符串，我们定义一种字符串字面量类型 `Method`：
 
 ```typescript
-export type Method = 'get' | 'GET'
-  | 'delete' | 'Delete'
-  | 'head' | 'HEAD'
-  | 'options' | 'OPTIONS'
-  | 'post' | 'POST'
-  | 'put' | 'PUT'
-  | 'patch' | 'PATCH'
+export type Method =
+  | 'get'
+  | 'GET'
+  | 'delete'
+  | 'Delete'
+  | 'head'
+  | 'HEAD'
+  | 'options'
+  | 'OPTIONS'
+  | 'post'
+  | 'POST'
+  | 'put'
+  | 'PUT'
+  | 'patch'
+  | 'PATCH';
 ```
 
 接着我们把 `AxiosRequestConfig` 中的 `method` 属性类型改成这种字符串字面量类型：
 
 ```typescript
 export interface AxiosRequestConfig {
-  url: string
-  method?: Method
-  data?: any
-  params?: any
+  url: string;
+  method?: Method;
+  data?: any;
+  params?: any;
 }
 ```
 
 然后回到 `index.ts`，我们引入 `AxiosRequestConfig` 类型，作为 `config` 的参数类型，如下：
 
 ```typescript
-import { AxiosRequestConfig } from './types'
+import { AxiosRequestConfig } from './types';
 
-function axios(config: AxiosRequestConfig) {
-}
+function axios(config: AxiosRequestConfig) {}
 
-export default axios
+export default axios;
 ```
 
 那么接下来，我们就来实现这个函数体内部的逻辑——发送请求。
@@ -101,23 +112,22 @@ export default axios
 于是我们在 `src` 目录下创建一个 `xhr.ts` 文件，我们导出一个 `xhr` 方法，它接受一个 `config` 参数，类型也是 `AxiosRequestConfig` 类型。
 
 ```typescript
-import { AxiosRequestConfig } from './types'
+import { AxiosRequestConfig } from './types';
 
-export default function xhr(config: AxiosRequestConfig) {
-}
+export default function xhr(config: AxiosRequestConfig) {}
 ```
 
 接下来，我们来实现这个函数体逻辑，如下：
 
 ```typescript
 export default function xhr(config: AxiosRequestConfig): void {
-  const { data = null, url, method = 'get' } = config
+  const { data = null, url, method = 'get' } = config;
 
-  const request = new XMLHttpRequest()
+  const request = new XMLHttpRequest();
 
-  request.open(method.toUpperCase(), url, true)
+  request.open(method.toUpperCase(), url, true);
 
-  request.send(data)
+  request.send(data);
 }
 ```
 
@@ -132,14 +142,14 @@ export default function xhr(config: AxiosRequestConfig): void {
 编写好了 `xhr` 模块，我们就需要在 `index.ts` 中去引入这个模块，如下：
 
 ```typescript
-import { AxiosRequestConfig } from './types'
-import xhr from './xhr'
+import { AxiosRequestConfig } from './types';
+import xhr from './xhr';
 
 function axios(config: AxiosRequestConfig): void {
-  xhr(config)
+  xhr(config);
 }
 
-export default axios
+export default axios;
 ```
 
 那么至此，我们基本的发送请求代码就编写完毕了，接下来我们来写一个小 demo，来使用我们编写的 axios 库去发送请求。
@@ -169,9 +179,9 @@ export default axios
 在 `examples` 目录下创建 `webpack` 配置文件 `webpack.config.js`：
 
 ```javascript
-const fs = require('fs')
-const path = require('path')
-const webpack = require('webpack')
+const fs = require('fs');
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'development',
@@ -185,13 +195,13 @@ module.exports = {
    * entries 是一个对象，key 为目录名
    */
   entry: fs.readdirSync(__dirname).reduce((entries, dir) => {
-    const fullDir = path.join(__dirname, dir)
-    const entry = path.join(fullDir, 'app.ts')
+    const fullDir = path.join(__dirname, dir);
+    const entry = path.join(fullDir, 'app.ts');
     if (fs.statSync(fullDir).isDirectory() && fs.existsSync(entry)) {
-      entries[dir] = ['webpack-hot-middleware/client', entry]
+      entries[dir] = ['webpack-hot-middleware/client', entry];
     }
 
-    return entries
+    return entries;
   }, {}),
 
   /**
@@ -200,7 +210,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, '__build__'),
     filename: '[name].js',
-    publicPath: '/__build__/'
+    publicPath: '/__build__/',
   },
 
   module: {
@@ -210,9 +220,9 @@ module.exports = {
         enforce: 'pre',
         use: [
           {
-            loader: 'tslint-loader'
-          }
-        ]
+            loader: 'tslint-loader',
+          },
+        ],
       },
       {
         test: /\.tsx?$/,
@@ -220,23 +230,23 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              transpileOnly: true
-            }
-          }
-        ]
-      }
-    ]
+              transpileOnly: true,
+            },
+          },
+        ],
+      },
+    ],
   },
 
   resolve: {
-    extensions: ['.ts', '.tsx', '.js']
+    extensions: ['.ts', '.tsx', '.js'],
   },
 
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin()
-  ]
-}
+    new webpack.NoEmitOnErrorsPlugin(),
+  ],
+};
 ```
 
 ### 编写 server 文件
@@ -244,35 +254,37 @@ module.exports = {
 在 `examples` 目录下创建 `server.js` 文件：
 
 ```javascript
-const express = require('express')
-const bodyParser = require('body-parser')
-const webpack = require('webpack')
-const webpackDevMiddleware = require('webpack-dev-middleware')
-const webpackHotMiddleware = require('webpack-hot-middleware')
-const WebpackConfig = require('./webpack.config')
+const express = require('express');
+const bodyParser = require('body-parser');
+const webpack = require('webpack');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
+const WebpackConfig = require('./webpack.config');
 
-const app = express()
-const compiler = webpack(WebpackConfig)
+const app = express();
+const compiler = webpack(WebpackConfig);
 
-app.use(webpackDevMiddleware(compiler, {
-  publicPath: '/__build__/',
-  stats: {
-    colors: true,
-    chunks: false
-  }
-}))
+app.use(
+  webpackDevMiddleware(compiler, {
+    publicPath: '/__build__/',
+    stats: {
+      colors: true,
+      chunks: false,
+    },
+  })
+);
 
-app.use(webpackHotMiddleware(compiler))
+app.use(webpackHotMiddleware(compiler));
 
-app.use(express.static(__dirname))
+app.use(express.static(__dirname));
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8080;
 module.exports = app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}, Ctrl+C to stop`)
-})
+  console.log(`Server listening on http://localhost:${port}, Ctrl+C to stop`);
+});
 ```
 
 ### 编写 demo 代码
@@ -285,9 +297,9 @@ module.exports = app.listen(port, () => {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>ts-axios examples</title>
-    <link rel="stylesheet" href="/global.css">
+    <link rel="stylesheet" href="/global.css" />
   </head>
   <body style="padding: 0 20px">
     <h1>ts-axios examples</h1>
@@ -301,8 +313,10 @@ module.exports = app.listen(port, () => {
 `global.css`：
 
 ```css
-html, body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   color: #2c3e50;
 }
 
@@ -329,7 +343,7 @@ a:hover {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Simple example</title>
   </head>
   <body>
@@ -341,30 +355,30 @@ a:hover {
 `app.ts` 文件如下：
 
 ```typescript
-import axios from '../../src/index'
+import axios from '../../src/index';
 
 axios({
   method: 'get',
   url: '/simple/get',
   params: {
     a: 1,
-    b: 2
-  }
-})
+    b: 2,
+  },
+});
 ```
 
 因为我们这里通过 `axios` 发送了请求，那么我们的 server 端要实现对应的路由接口，我们来修改 `server.js`，添加如下代码：
 
 ```javascript
-const router = express.Router()
+const router = express.Router();
 
-router.get('/simple/get', function(req, res) {
+router.get('/simple/get', function (req, res) {
   res.json({
-    msg: `hello world`
-  })
-})
+    msg: `hello world`,
+  });
+});
 
-app.use(router)
+app.use(router);
 ```
 
 ### 运行 demo

@@ -1,10 +1,18 @@
+---
+layout: post
+title: 请求模块单元测试
+description: [Jasmine](https://jasmine.github.io/pages/getting_started.html) 是一个 BDD(行为驱动开发)的测试框架，它有很多成熟的插件，比如我们要用到的 [`jasmine-ajax`](https://github.com/jasmine/jasmine-ajax)，它会为我们发出的 Ajax 请求根据规范定义一组假的响应，并跟踪我们发出的Ajax请求，可以让我们方便的为结果做断言。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 请求模块单元测试
 
 请求模块是 axios 最基础的模块，通过一个 axios 方法发送 Ajax 请求。
 
 ## jasmine-ajax
 
-[Jasmine](https://jasmine.github.io/pages/getting_started.html) 是一个 BDD(行为驱动开发)的测试框架，它有很多成熟的插件，比如我们要用到的 [`jasmine-ajax`](https://github.com/jasmine/jasmine-ajax)，它会为我们发出的 Ajax 请求根据规范定义一组假的响应，并跟踪我们发出的Ajax请求，可以让我们方便的为结果做断言。
+[Jasmine](https://jasmine.github.io/pages/getting_started.html) 是一个 BDD(行为驱动开发)的测试框架，它有很多成熟的插件，比如我们要用到的 [`jasmine-ajax`](https://github.com/jasmine/jasmine-ajax)，它会为我们发出的 Ajax 请求根据规范定义一组假的响应，并跟踪我们发出的 Ajax 请求，可以让我们方便的为结果做断言。
 
 其实 Jest 也可以去写插件，但并没有现成的 Ajax 相关的 Jest 插件，但是 Jest 测试中我们仍然可以使用 Jasmine 相关的插件，只需要做一些小小的配置即可。
 
@@ -15,12 +23,12 @@
 这个时候我们需要去修改 `test/boot.ts` 文件，因为每次跑具体测试代码之前会先运行该文件，我们可以在这里去初始化 `jasmine-ajax`。
 
 ```typescript
-const JasmineCore = require('jasmine-core')
+const JasmineCore = require('jasmine-core');
 // @ts-ignore
-global.getJasmineRequireObj = function() {
-  return JasmineCore
-}
-require('jasmine-ajax')
+global.getJasmineRequireObj = function () {
+  return JasmineCore;
+};
+require('jasmine-ajax');
 ```
 
 这里为了让 `jasmine-ajax` 插件运行成功，我们需要手动添加全局的 `getJasmineRequireObj` 方法，参考 [issue](https://github.com/jasmine/jasmine-ajax/issues/178)。
@@ -32,253 +40,252 @@ require('jasmine-ajax')
 `test/requests.spec.ts`：
 
 ```typescript
-import axios, { AxiosResponse, AxiosError } from '../src/index'
-import { getAjaxRequest } from './helper'
+import axios, { AxiosResponse, AxiosError } from '../src/index';
+import { getAjaxRequest } from './helper';
 
 describe('requests', () => {
   beforeEach(() => {
-    jasmine.Ajax.install()
-  })
+    jasmine.Ajax.install();
+  });
 
   afterEach(() => {
-    jasmine.Ajax.uninstall()
-  })
+    jasmine.Ajax.uninstall();
+  });
 
   test('should treat single string arg as url', () => {
-    axios('/foo')
+    axios('/foo');
 
-    return getAjaxRequest().then(request => {
-      expect(request.url).toBe('/foo')
-      expect(request.method).toBe('GET')
-    })
-  })
+    return getAjaxRequest().then((request) => {
+      expect(request.url).toBe('/foo');
+      expect(request.method).toBe('GET');
+    });
+  });
 
-  test('should treat method value as lowercase string', done => {
+  test('should treat method value as lowercase string', (done) => {
     axios({
       url: '/foo',
-      method: 'POST'
-    }).then(response => {
-      expect(response.config.method).toBe('post')
-      done()
-    })
+      method: 'POST',
+    }).then((response) => {
+      expect(response.config.method).toBe('post');
+      done();
+    });
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
-        status: 200
-      })
-    })
-  })
+        status: 200,
+      });
+    });
+  });
 
-  test('should reject on network errors', done => {
+  test('should reject on network errors', (done) => {
     const resolveSpy = jest.fn((res: AxiosResponse) => {
-      return res
-    })
+      return res;
+    });
 
     const rejectSpy = jest.fn((e: AxiosError) => {
-      return e
-    })
+      return e;
+    });
 
-    jasmine.Ajax.uninstall()
+    jasmine.Ajax.uninstall();
 
-    axios('/foo')
-      .then(resolveSpy)
-      .catch(rejectSpy)
-      .then(next)
+    axios('/foo').then(resolveSpy).catch(rejectSpy).then(next);
 
     function next(reason: AxiosResponse | AxiosError) {
-      expect(resolveSpy).not.toHaveBeenCalled()
-      expect(rejectSpy).toHaveBeenCalled()
-      expect(reason instanceof Error).toBeTruthy()
-      expect((reason as AxiosError).message).toBe('Network Error')
-      expect(reason.request).toEqual(expect.any(XMLHttpRequest))
+      expect(resolveSpy).not.toHaveBeenCalled();
+      expect(rejectSpy).toHaveBeenCalled();
+      expect(reason instanceof Error).toBeTruthy();
+      expect((reason as AxiosError).message).toBe('Network Error');
+      expect(reason.request).toEqual(expect.any(XMLHttpRequest));
 
-      jasmine.Ajax.install()
+      jasmine.Ajax.install();
 
-      done()
+      done();
     }
-  })
+  });
 
-  test('should reject when request timeout', done => {
-    let err: AxiosError
+  test('should reject when request timeout', (done) => {
+    let err: AxiosError;
 
     axios('/foo', {
       timeout: 2000,
-      method: 'post'
-    }).catch(error => {
-      err = error
-    })
+      method: 'post',
+    }).catch((error) => {
+      err = error;
+    });
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       // @ts-ignore
-      request.eventBus.trigger('timeout')
+      request.eventBus.trigger('timeout');
 
       setTimeout(() => {
-        expect(err instanceof Error).toBeTruthy()
-        expect(err.message).toBe('Timeout of 2000 ms exceeded')
-        done()
-      }, 100)
-    })
-  })
+        expect(err instanceof Error).toBeTruthy();
+        expect(err.message).toBe('Timeout of 2000 ms exceeded');
+        done();
+      }, 100);
+    });
+  });
 
-  test('should reject when validateStatus returns false', done => {
+  test('should reject when validateStatus returns false', (done) => {
     const resolveSpy = jest.fn((res: AxiosResponse) => {
-      return res
-    })
+      return res;
+    });
 
     const rejectSpy = jest.fn((e: AxiosError) => {
-      return e
-    })
+      return e;
+    });
 
     axios('/foo', {
       validateStatus(status) {
-        return status !== 500
-      }
+        return status !== 500;
+      },
     })
       .then(resolveSpy)
       .catch(rejectSpy)
-      .then(next)
+      .then(next);
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
-        status: 500
-      })
-    })
+        status: 500,
+      });
+    });
 
     function next(reason: AxiosError | AxiosResponse) {
-      expect(resolveSpy).not.toHaveBeenCalled()
-      expect(rejectSpy).toHaveBeenCalled()
-      expect(reason instanceof Error).toBeTruthy()
-      expect((reason as AxiosError).message).toBe('Request failed with status code 500')
-      expect((reason as AxiosError).response!.status).toBe(500)
+      expect(resolveSpy).not.toHaveBeenCalled();
+      expect(rejectSpy).toHaveBeenCalled();
+      expect(reason instanceof Error).toBeTruthy();
+      expect((reason as AxiosError).message).toBe(
+        'Request failed with status code 500'
+      );
+      expect((reason as AxiosError).response!.status).toBe(500);
 
-      done()
+      done();
     }
-  })
+  });
 
-  test('should resolve when validateStatus returns true', done => {
+  test('should resolve when validateStatus returns true', (done) => {
     const resolveSpy = jest.fn((res: AxiosResponse) => {
-      return res
-    })
+      return res;
+    });
 
     const rejectSpy = jest.fn((e: AxiosError) => {
-      return e
-    })
+      return e;
+    });
 
     axios('/foo', {
       validateStatus(status) {
-        return status === 500
-      }
+        return status === 500;
+      },
     })
       .then(resolveSpy)
       .catch(rejectSpy)
-      .then(next)
+      .then(next);
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
-        status: 500
-      })
-    })
+        status: 500,
+      });
+    });
 
     function next(res: AxiosResponse | AxiosError) {
-      expect(resolveSpy).toHaveBeenCalled()
-      expect(rejectSpy).not.toHaveBeenCalled()
-      expect(res.config.url).toBe('/foo')
+      expect(resolveSpy).toHaveBeenCalled();
+      expect(rejectSpy).not.toHaveBeenCalled();
+      expect(res.config.url).toBe('/foo');
 
-      done()
+      done();
     }
-  })
+  });
 
-  test('should return JSON when resolved', done => {
-    let response: AxiosResponse
+  test('should return JSON when resolved', (done) => {
+    let response: AxiosResponse;
 
     axios('/api/account/signup', {
       auth: {
         username: '',
-        password: ''
+        password: '',
       },
       method: 'post',
       headers: {
-        Accept: 'application/json'
-      }
-    }).then(res => {
-      response = res
-    })
+        Accept: 'application/json',
+      },
+    }).then((res) => {
+      response = res;
+    });
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
         status: 200,
         statusText: 'OK',
-        responseText: '{"a": 1}'
-      })
+        responseText: '{"a": 1}',
+      });
 
       setTimeout(() => {
-        expect(response.data).toEqual({ a: 1 })
-        done()
-      }, 100)
-    })
-  })
+        expect(response.data).toEqual({ a: 1 });
+        done();
+      }, 100);
+    });
+  });
 
-  test('should return JSON when rejecting', done => {
-    let response: AxiosResponse
+  test('should return JSON when rejecting', (done) => {
+    let response: AxiosResponse;
 
     axios('/api/account/signup', {
       auth: {
         username: '',
-        password: ''
+        password: '',
       },
       method: 'post',
       headers: {
-        Accept: 'application/json'
-      }
-    }).catch(error => {
-      response = error.response
-    })
+        Accept: 'application/json',
+      },
+    }).catch((error) => {
+      response = error.response;
+    });
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
         status: 400,
         statusText: 'Bad Request',
-        responseText: '{"error": "BAD USERNAME", "code": 1}'
-      })
+        responseText: '{"error": "BAD USERNAME", "code": 1}',
+      });
 
       setTimeout(() => {
-        expect(typeof response.data).toBe('object')
-        expect(response.data.error).toBe('BAD USERNAME')
-        expect(response.data.code).toBe(1)
-        done()
-      }, 100)
-    })
-  })
+        expect(typeof response.data).toBe('object');
+        expect(response.data.error).toBe('BAD USERNAME');
+        expect(response.data.code).toBe(1);
+        done();
+      }, 100);
+    });
+  });
 
-  test('should supply correct response', done => {
-    let response: AxiosResponse
+  test('should supply correct response', (done) => {
+    let response: AxiosResponse;
 
-    axios.post('/foo').then(res => {
-      response = res
-    })
+    axios.post('/foo').then((res) => {
+      response = res;
+    });
 
-    getAjaxRequest().then(request => {
+    getAjaxRequest().then((request) => {
       request.respondWith({
         status: 200,
         statusText: 'OK',
         responseText: '{"foo": "bar"}',
         responseHeaders: {
-          'Content-Type': 'application/json'
-        }
-      })
+          'Content-Type': 'application/json',
+        },
+      });
 
       setTimeout(() => {
-        expect(response.data.foo).toBe('bar')
-        expect(response.status).toBe(200)
-        expect(response.statusText).toBe('OK')
-        expect(response.headers['content-type']).toBe('application/json')
-        done()
-      }, 100)
-    })
-  })
+        expect(response.data.foo).toBe('bar');
+        expect(response.status).toBe(200);
+        expect(response.statusText).toBe('OK');
+        expect(response.headers['content-type']).toBe('application/json');
+        done();
+      }, 100);
+    });
+  });
 
   test('should allow overriding Content-Type header case-insensitive', () => {
-    let response: AxiosResponse
+    let response: AxiosResponse;
 
     axios
       .post(
@@ -286,19 +293,19 @@ describe('requests', () => {
         { prop: 'value' },
         {
           headers: {
-            'content-type': 'application/json'
-          }
+            'content-type': 'application/json',
+          },
         }
       )
-      .then(res => {
-        response = res
-      })
+      .then((res) => {
+        response = res;
+      });
 
-    return getAjaxRequest().then(request => {
-      expect(request.requestHeaders['Content-Type']).toBe('application/json')
-    })
-  })
-})
+    return getAjaxRequest().then((request) => {
+      expect(request.requestHeaders['Content-Type']).toBe('application/json');
+    });
+  });
+});
 ```
 
 我们要注意的一些点，在这里列出：
@@ -329,7 +336,6 @@ describe('requests', () => {
 
 由于 `request.responseTimeout` 方法内部依赖了 `jasmine.clock` 方法会导致运行失败，这里我直接用了 `request.eventBus.trigger('timeout')` 方法触发了 `timeout` 事件。因为这个方法不在接口定义中，所以需要加 `// @ts-ignore`。
 
-
 另外，我们在测试中发现 2 个 case 没有通过。
 
 第一个是 `should treat method value as lowercase string`，这个测试用例是我们发送请求的 ` method` 需要转换成小写字符串，这么做的目的也是为了之后 `flattenHeaders` 能正常处理这些 `method`，所以我们需要修改源码逻辑。
@@ -349,7 +355,7 @@ describe('requests', () => {
 
     config = mergeConfig(this.defaults, config)
     config.method = config.method.toLowerCase()
-    
+
     // ...
   }
 ```
@@ -361,20 +367,22 @@ describe('requests', () => {
 `core/dispatchRequest.ts`：
 
 ```typescript
-export default function dispatchRequest(config: AxiosRequestConfig): AxiosPromise {
-  throwIfCancellationRequested(config)
-  processConfig(config)
+export default function dispatchRequest(
+  config: AxiosRequestConfig
+): AxiosPromise {
+  throwIfCancellationRequested(config);
+  processConfig(config);
   return xhr(config).then(
-    res => {
-      return transformResponseData(res)
+    (res) => {
+      return transformResponseData(res);
     },
-    e => {
+    (e) => {
       if (e && e.response) {
-        e.response = transformResponseData(e.response)
+        e.response = transformResponseData(e.response);
       }
-      return Promise.reject(e)
+      return Promise.reject(e);
     }
-  )
+  );
 }
 ```
 

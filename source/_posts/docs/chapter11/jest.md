@@ -1,3 +1,11 @@
+---
+layout: post
+title: Jest 安装和配置
+description: 由于我们的项目是使用 `typescript-library-starter` 初始化的，已经内置了 Jest 的安装，但是安装的版本却不是最新的，我们可以对 `package.json` 中的相关依赖版本做修改，重新安装。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # Jest 安装和配置
 
 ## Jest 安装
@@ -56,7 +64,7 @@
 
 - [transform](https://jestjs.io/docs/en/configuration#transform-object-string-string)
 
-简单地说就是一种转换器配置，比如我们这里的 
+简单地说就是一种转换器配置，比如我们这里的
 
 ```json
 "transform": {
@@ -79,11 +87,11 @@
 - [testRegex](https://jestjs.io/docs/en/configuration#testregex-string-array-string)
 
 要测试文件的正则表达式。
- 
+
 ```json
 "testRegex": "/test/.*\\.(test|spec)\\.(ts)$"
-``` 
- 
+```
+
 表示 `test` 目录下所有以 `.test.ts` 和 `.spec.ts` 的文件都需要跑测试。
 
 - [moduleFileExtensions](https://jestjs.io/docs/en/configuration#modulefileextensions-array-string)
@@ -130,7 +138,6 @@
 
 表示收集 `src` 目录以及它的所有子目录中的 `js` 和 `ts` 文件的测试覆盖率。
 
-
 - [setupFilesAfterEnv](https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
 测试框架安装后立即执行的代码文件列表。
@@ -146,9 +153,3 @@
 其他关于 Jest 的配置，感兴趣的同学可以去[官网](https://jestjs.io/docs/en/configuration)做扩展学习。
 
 至此，我们学习了 Jest 的安装和配置，下节课我们就开始编写 `ts-axios` 库的单元测试。
-
-
-
-
-
-

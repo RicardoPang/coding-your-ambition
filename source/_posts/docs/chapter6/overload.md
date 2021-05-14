@@ -1,3 +1,11 @@
+---
+layout: post
+title: 函数重载
+description: 第一个参数是 `url`，第二个参数是 `config`，这个函数有点类似 `axios.get` 方法支持的参数类型，不同的是如果我们想要指定 HTTP 方法类型，仍然需要在 `config` 传入 `method`。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # axios 函数重载
 
 ## 需求分析
@@ -9,9 +17,9 @@ axios({
   url: '/extend/post',
   method: 'post',
   data: {
-    msg: 'hi'
-  }
-})
+    msg: 'hi',
+  },
+});
 ```
 
 我们希望该函数也能支持传入 2 个参数，如下：
@@ -20,9 +28,9 @@ axios({
 axios('/extend/post', {
   method: 'post',
   data: {
-    msg: 'hello'
-  }
-})
+    msg: 'hello',
+  },
+});
 ```
 
 第一个参数是 `url`，第二个参数是 `config`，这个函数有点类似 `axios.get` 方法支持的参数类型，不同的是如果我们想要指定 HTTP 方法类型，仍然需要在 `config` 传入 `method`。
@@ -37,9 +45,9 @@ axios('/extend/post', {
 
 ```typescript
 export interface AxiosInstance extends Axios {
-  (config: AxiosRequestConfig): AxiosPromise
+  (config: AxiosRequestConfig): AxiosPromise;
 
-  (url: string, config?: AxiosRequestConfig): AxiosPromise
+  (url: string, config?: AxiosRequestConfig): AxiosPromise;
 }
 ```
 
@@ -61,7 +69,7 @@ export interface AxiosInstance extends Axios {
     }
     return dispatchRequest(config)
   }
-``` 
+```
 
 我们把 `request` 函数的参数改成 2 个，`url` 和 `config` 都是 `any` 类型，`config` 还是可选参数。
 
@@ -78,16 +86,16 @@ axios({
   url: '/extend/post',
   method: 'post',
   data: {
-    msg: 'hi'
-  }
-})
+    msg: 'hi',
+  },
+});
 
 axios('/extend/post', {
   method: 'post',
   data: {
-    msg: 'hello'
-  }
-})
+    msg: 'hello',
+  },
+});
 ```
 
 我们使用了 `axios` 2 种请求方式，打开页面运行 `demo`，通过 network 我们可以看到 2 种请求都是运行正常的。

@@ -1,3 +1,11 @@
+---
+layout: post
+title: HTTP 授权
+description: HTTP 协议中的 [Authorization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) 请求 header 会包含服务器用于验证用户代理身份的凭证，通常会在服务器返回 401 Unauthorized 状态码以及 WWW-Authenticate 消息头之后在后续请求中发送此消息头。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # HTTP 授权
 
 ## 需求分析
@@ -8,16 +16,22 @@ axios 库也允许你在请求配置中配置 `auth` 属性，`auth` 是一个�
 这里的加密串是 `username:password` base64 加密后的结果。
 
 ```typescript
-axios.post('/more/post', {
-  a: 1
-}, {
-  auth: {
-    username: 'Yee',
-    password: '123456'
-  }
-}).then(res => {
-  console.log(res)
-})
+axios
+  .post(
+    '/more/post',
+    {
+      a: 1,
+    },
+    {
+      auth: {
+        username: 'Yee',
+        password: '123456',
+      },
+    }
+  )
+  .then((res) => {
+    console.log(res);
+  });
 ```
 
 ## 代码实现
@@ -29,12 +43,12 @@ axios.post('/more/post', {
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  auth?: AxiosBasicCredentials
+  auth?: AxiosBasicCredentials;
 }
 
 export interface AxiosBasicCredentials {
-  username: string
-  password: string
+  username: string;
+  password: string;
 }
 ```
 
@@ -43,7 +57,7 @@ export interface AxiosBasicCredentials {
 `core/mergeConfig.ts`：
 
 ```typescript
-const stratKeysDeepMerge = ['headers', 'auth']
+const stratKeysDeepMerge = ['headers', 'auth'];
 ```
 
 然后修改发送请求前的逻辑。
@@ -53,43 +67,50 @@ const stratKeysDeepMerge = ['headers', 'auth']
 ```typescript
 const {
   /*...*/
-  auth
-} = config
+  auth,
+} = config;
 
 if (auth) {
-  headers['Authorization'] = 'Basic ' + btoa(auth.username + ':' + auth.password)
+  headers['Authorization'] =
+    'Basic ' + btoa(auth.username + ':' + auth.password);
 }
 ```
 
 ## demo 编写
 
 ```typescript
-axios.post('/more/post', {
-  a: 1
-}, {
-  auth: {
-    username: 'Yee',
-    password: '123456'
-  }
-}).then(res => {
-  console.log(res)
-})
+axios
+  .post(
+    '/more/post',
+    {
+      a: 1,
+    },
+    {
+      auth: {
+        username: 'Yee',
+        password: '123456',
+      },
+    }
+  )
+  .then((res) => {
+    console.log(res);
+  });
 ```
 
 另外，我们在 `server.js` 中对于这个路由接口写了一段小逻辑：
 
 ```javascript
-router.post('/more/post', function(req, res) {
-  const auth = req.headers.authorization
-  const [type, credentials] = auth.split(' ')
-  console.log(atob(credentials))
-  const [username, password] = atob(credentials).split(':')
+router.post('/more/post', function (req, res) {
+  const auth = req.headers.authorization;
+  const [type, credentials] = auth.split(' ');
+  console.log(atob(credentials));
+  const [username, password] = atob(credentials).split(':');
   if (type === 'Basic' && username === 'Yee' && password === '123456') {
-    res.json(req.body)
+    res.json(req.body);
   } else {
-    res.end('UnAuthorization')
+    res.end('UnAuthorization');
   }
-})
+});
 ```
 
 注意，这里我们需要安装第三方库 `atob` 实现 base64 串的解码。

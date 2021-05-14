@@ -1,8 +1,16 @@
+---
+layout: post
+title: XSRF 防御
+description: XSRF 又名 [CSRF](https://developer.mozilla.org/en-US/docs/Learn/Server-side/First_steps/Website_security#Cross-Site_Request_Forgery_(CSRF))，跨站请求伪造，它是前端常见的一种攻击方式，我们先通过一张图来认识它的攻击手段。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # XSRF 防御
 
 ## 需求分析
 
-XSRF 又名 [CSRF](https://developer.mozilla.org/en-US/docs/Learn/Server-side/First_steps/Website_security#Cross-Site_Request_Forgery_(CSRF))，跨站请求伪造，它是前端常见的一种攻击方式，我们先通过一张图来认识它的攻击手段。
+XSRF 又名 [CSRF](<https://developer.mozilla.org/en-US/docs/Learn/Server-side/First_steps/Website_security#Cross-Site_Request_Forgery_(CSRF)>)，跨站请求伪造，它是前端常见的一种攻击方式，我们先通过一张图来认识它的攻击手段。
 
 <img :src="$withBase('/xsrf.png')" alt="xsrf">
 
@@ -11,12 +19,14 @@ CSRF 的防御手段有很多，比如验证请求的 referer，但是 referer �
 对于我们的 `ts-axios` 库，我们要自动把这几件事做了，每次发送请求的时候，从 `cookie` 中读取对应的 `token` 值，然后添加到请求 `headers`中。我们允许用户配置 `xsrfCookieName` 和 `xsrfHeaderName`，其中 `xsrfCookieName` 表示存储 `token` 的 `cookie` 名称，`xsrfHeaderName` 表示请求 `headers` 中 `token` 对应的 `header` 名称。
 
 ```typescript
-axios.get('/more/get',{
-  xsrfCookieName: 'XSRF-TOKEN', // default
-  xsrfHeaderName: 'X-XSRF-TOKEN' // default
-}).then(res => {
-  console.log(res)
-})
+axios
+  .get('/more/get', {
+    xsrfCookieName: 'XSRF-TOKEN', // default
+    xsrfHeaderName: 'X-XSRF-TOKEN', // default
+  })
+  .then((res) => {
+    console.log(res);
+  });
 ```
 
 我们提供 `xsrfCookieName` 和 `xsrfHeaderName` 的默认值，当然用户也可以根据自己的需求在请求中去配置 `xsrfCookieName` 和 `xsrfHeaderName`。
@@ -30,8 +40,8 @@ axios.get('/more/get',{
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  xsrfCookieName?: string
-  xsrfHeaderName?: string
+  xsrfCookieName?: string;
+  xsrfHeaderName?: string;
 }
 ```
 
@@ -45,7 +55,7 @@ const defaults: AxiosRequestConfig = {
   xsrfCookieName: 'XSRF-TOKEN',
 
   xsrfHeaderName: 'X-XSRF-TOKEN',
-}
+};
 ```
 
 接下来我们要做三件事：
@@ -62,29 +72,29 @@ const defaults: AxiosRequestConfig = {
 
 ```typescript
 interface URLOrigin {
-  protocol: string
-  host: string
+  protocol: string;
+  host: string;
 }
-
 
 export function isURLSameOrigin(requestURL: string): boolean {
-  const parsedOrigin = resolveURL(requestURL)
+  const parsedOrigin = resolveURL(requestURL);
   return (
-    parsedOrigin.protocol === currentOrigin.protocol && parsedOrigin.host === currentOrigin.host
-  )
+    parsedOrigin.protocol === currentOrigin.protocol &&
+    parsedOrigin.host === currentOrigin.host
+  );
 }
 
-const urlParsingNode = document.createElement('a')
-const currentOrigin = resolveURL(window.location.href)
+const urlParsingNode = document.createElement('a');
+const currentOrigin = resolveURL(window.location.href);
 
 function resolveURL(url: string): URLOrigin {
-  urlParsingNode.setAttribute('href', url)
-  const { protocol, host } = urlParsingNode
+  urlParsingNode.setAttribute('href', url);
+  const { protocol, host } = urlParsingNode;
 
   return {
     protocol,
-    host
-  }
+    host,
+  };
 }
 ```
 
@@ -97,12 +107,14 @@ function resolveURL(url: string): URLOrigin {
 ```typescript
 const cookie = {
   read(name: string): string | null {
-    const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'))
-    return match ? decodeURIComponent(match[3]) : null
-  }
-}
+    const match = document.cookie.match(
+      new RegExp('(^|;\\s*)(' + name + ')=([^;]*)')
+    );
+    return match ? decodeURIComponent(match[3]) : null;
+  },
+};
 
-export default cookie
+export default cookie;
 ```
 
 `cookie` 的读取逻辑很简单，利用了正则表达式可以解析到 `name` 对应的值。
@@ -115,13 +127,13 @@ export default cookie
 const {
   /*...*/
   xsrfCookieName,
-  xsrfHeaderName
-} = config
+  xsrfHeaderName,
+} = config;
 
-if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName){
-  const xsrfValue = cookie.read(xsrfCookieName)
+if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName) {
+  const xsrfValue = cookie.read(xsrfCookieName);
   if (xsrfValue) {
-    headers[xsrfHeaderName!] = xsrfValue
+    headers[xsrfHeaderName!] = xsrfValue;
   }
 }
 ```
@@ -131,22 +143,24 @@ if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName){
 ```typescript
 const instance = axios.create({
   xsrfCookieName: 'XSRF-TOKEN-D',
-  xsrfHeaderName: 'X-XSRF-TOKEN-D'
-})
+  xsrfHeaderName: 'X-XSRF-TOKEN-D',
+});
 
-instance.get('/more/get').then(res => {
-  console.log(res)
-})
+instance.get('/more/get').then((res) => {
+  console.log(res);
+});
 ```
 
 `examples/server.js`：
 
 ```javascript
-app.use(express.static(__dirname, {
-  setHeaders (res) {
-    res.cookie('XSRF-TOKEN-D', '1234abc')
-  }
-}))
+app.use(
+  express.static(__dirname, {
+    setHeaders(res) {
+      res.cookie('XSRF-TOKEN-D', '1234abc');
+    },
+  })
+);
 ```
 
 在访问页面的时候，服务端通过 `set-cookie` 往客户端种了 `key` 为 `XSRF-TOKEN`，值为 `1234abc` 的 `cookie`，作为 `xsrf` 的 `token` 值。

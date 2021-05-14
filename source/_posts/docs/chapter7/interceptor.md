@@ -1,3 +1,13 @@
+---
+layout: post
+title: 拦截器设计与实现
+description: 我们希望能对请求的发送和响应做拦截，也就是在发送请求之前和接收到响应之后做一些额外逻辑。
+
+我们希望设计的拦截器的使用方式如下：
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 拦截器设计与实现
 
 ## 需求分析
@@ -8,21 +18,27 @@
 
 ```typescript
 // 添加一个请求拦截器
-axios.interceptors.request.use(function (config) {
-  // 在发送请求之前可以做一些事情
-  return config;
-}, function (error) {
-  // 处理请求错误
-  return Promise.reject(error);
-});
+axios.interceptors.request.use(
+  function (config) {
+    // 在发送请求之前可以做一些事情
+    return config;
+  },
+  function (error) {
+    // 处理请求错误
+    return Promise.reject(error);
+  }
+);
 // 添加一个响应拦截器
-axios.interceptors.response.use(function (response) {
-  // 处理响应数据
-  return response;
-}, function (error) {
-  // 处理响应错误
-  return Promise.reject(error);
-});
+axios.interceptors.response.use(
+  function (response) {
+    // 处理响应数据
+    return response;
+  },
+  function (error) {
+    // 处理响应错误
+    return Promise.reject(error);
+  }
+);
 ```
 
 在 `axios` 对象上有一个 `interceptors` 对象属性，该属性又有 `request` 和 `response` 2 个属性，它们都有一个 `use` 方法，`use` 方法支持 2 个参数，第一个参数类似 Promise 的 `resolve` 函数，第二个参数类似 Promise 的 `reject` 函数。我们可以在 `resolve` 函数和 `reject` 函数中执行同步代码或者是异步代码逻辑。
@@ -30,21 +46,23 @@ axios.interceptors.response.use(function (response) {
 并且我们是可以添加多个拦截器的，拦截器的执行顺序是链式依次执行的方式。对于 `request` 拦截器，后添加的拦截器会在请求前的过程中先执行；对于 `response` 拦截器，先添加的拦截器会在响应后先执行。
 
 ```typescript
-axios.interceptors.request.use(config => {
-  config.headers.test += '1'
-  return config
-})
-axios.interceptors.request.use(config => {
-  config.headers.test += '2'
-  return config
-})
+axios.interceptors.request.use((config) => {
+  config.headers.test += '1';
+  return config;
+});
+axios.interceptors.request.use((config) => {
+  config.headers.test += '2';
+  return config;
+});
 ```
 
 此外，我们也可以支持删除某个拦截器，如下：
 
 ```typescript
-const myInterceptor = axios.interceptors.request.use(function () {/*...*/})
-axios.interceptors.request.eject(myInterceptor)
+const myInterceptor = axios.interceptors.request.use(function () {
+  /*...*/
+});
+axios.interceptors.request.eject(myInterceptor);
 ```
 
 ## 整体设计
@@ -72,17 +90,17 @@ axios.interceptors.request.eject(myInterceptor)
 
 ```typescript
 export interface AxiosInterceptorManager<T> {
-  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number
+  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number;
 
-  eject(id: number): void
+  eject(id: number): void;
 }
 
-export interface ResolvedFn<T=any> {
-  (val: T): T | Promise<T>
+export interface ResolvedFn<T = any> {
+  (val: T): T | Promise<T>;
 }
 
 export interface RejectedFn {
-  (error: any): any
+  (error: any): any;
 }
 ```
 
@@ -91,39 +109,39 @@ export interface RejectedFn {
 ### 代码实现
 
 ```typescript
-import { ResolvedFn, RejectedFn } from '../types'
+import { ResolvedFn, RejectedFn } from '../types';
 
 interface Interceptor<T> {
-  resolved: ResolvedFn<T>
-  rejected?: RejectedFn
+  resolved: ResolvedFn<T>;
+  rejected?: RejectedFn;
 }
 
 export default class InterceptorManager<T> {
-  private interceptors: Array<Interceptor<T> | null>
+  private interceptors: Array<Interceptor<T> | null>;
 
   constructor() {
-    this.interceptors = []
+    this.interceptors = [];
   }
 
   use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number {
     this.interceptors.push({
       resolved,
-      rejected
-    })
-    return this.interceptors.length - 1
+      rejected,
+    });
+    return this.interceptors.length - 1;
   }
 
   forEach(fn: (interceptor: Interceptor<T>) => void): void {
-    this.interceptors.forEach(interceptor => {
+    this.interceptors.forEach((interceptor) => {
       if (interceptor !== null) {
-        fn(interceptor)
+        fn(interceptor);
       }
-    })
+    });
   }
 
   eject(id: number): void {
     if (this.interceptors[id]) {
-      this.interceptors[id] = null
+      this.interceptors[id] = null;
     }
   }
 }
@@ -139,18 +157,18 @@ export default class InterceptorManager<T> {
 
 ```typescript
 interface Interceptors {
-  request: InterceptorManager<AxiosRequestConfig>
-  response: InterceptorManager<AxiosResponse>
+  request: InterceptorManager<AxiosRequestConfig>;
+  response: InterceptorManager<AxiosResponse>;
 }
 
 export default class Axios {
-  interceptors: Interceptors
+  interceptors: Interceptors;
 
   constructor() {
     this.interceptors = {
       request: new InterceptorManager<AxiosRequestConfig>(),
-      response: new InterceptorManager<AxiosResponse>()
-    }
+      response: new InterceptorManager<AxiosResponse>(),
+    };
   }
 }
 ```
@@ -215,7 +233,7 @@ request(url: any, config?: any): AxiosPromise {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Interceptor example</title>
   </head>
   <body>
@@ -227,45 +245,45 @@ request(url: any, config?: any): AxiosPromise {
 接着创建 `app.ts` 作为入口文件：
 
 ```typescript
-import axios from '../../src/index'
+import axios from '../../src/index';
 
-axios.interceptors.request.use(config => {
-  config.headers.test += '1'
-  return config
-})
-axios.interceptors.request.use(config => {
-  config.headers.test += '2'
-  return config
-})
-axios.interceptors.request.use(config => {
-  config.headers.test += '3'
-  return config
-})
+axios.interceptors.request.use((config) => {
+  config.headers.test += '1';
+  return config;
+});
+axios.interceptors.request.use((config) => {
+  config.headers.test += '2';
+  return config;
+});
+axios.interceptors.request.use((config) => {
+  config.headers.test += '3';
+  return config;
+});
 
-axios.interceptors.response.use(res => {
-  res.data += '1'
-  return res
-})
-let interceptor = axios.interceptors.response.use(res => {
-  res.data += '2'
-  return res
-})
-axios.interceptors.response.use(res => {
-  res.data += '3'
-  return res
-})
+axios.interceptors.response.use((res) => {
+  res.data += '1';
+  return res;
+});
+let interceptor = axios.interceptors.response.use((res) => {
+  res.data += '2';
+  return res;
+});
+axios.interceptors.response.use((res) => {
+  res.data += '3';
+  return res;
+});
 
-axios.interceptors.response.eject(interceptor)
+axios.interceptors.response.eject(interceptor);
 
 axios({
   url: '/interceptor/get',
   method: 'get',
   headers: {
-    test: ''
-  }
+    test: '',
+  },
 }).then((res) => {
-  console.log(res.data)
-})
+  console.log(res.data);
+});
 ```
 
 该 demo 我们添加了 3 个请求拦截器，添加了 3 个响应拦截器并删除了第二个。运行该 demo 我们通过浏览器访问，我们发送的请求添加了一个 `test` 的请求 header，它的值是 `321`；我们的响应数据返回的是 `hello`，经过响应拦截器的处理，最终我们输出的数据是 `hello13`。

@@ -1,3 +1,11 @@
+---
+layout: post
+title: 处理响应 header
+description: 我们通过 `XMLHttpRequest` 对象的 `getAllResponseHeaders` 方法获取到的值是如下一段字符串：
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 处理响应 header
 
 ## 需求分析
@@ -34,32 +42,33 @@ content-type: application/json; charset=utf-8
 
 ```typescript
 export function parseHeaders(headers: string): any {
-  let parsed = Object.create(null)
+  let parsed = Object.create(null);
   if (!headers) {
-    return parsed
+    return parsed;
   }
 
-  headers.split('\r\n').forEach(line => {
-    let [key, val] = line.split(':')
-    key = key.trim().toLowerCase()
+  headers.split('\r\n').forEach((line) => {
+    let [key, val] = line.split(':');
+    key = key.trim().toLowerCase();
     if (!key) {
-      return
+      return;
     }
     if (val) {
-      val = val.trim()
+      val = val.trim();
     }
-    parsed[key] = val
-  })
+    parsed[key] = val;
+  });
 
-  return parsed
+  return parsed;
 }
 ```
+
 然后我们使用这个工具函数：
 
 `xhr.ts`：
 
 ```typescript
-const responseHeaders = parseHeaders(request.getAllResponseHeaders())
+const responseHeaders = parseHeaders(request.getAllResponseHeaders());
 ```
 
 接着我们再去看刚才的 demo，发现我们已经把响应的 `headers` 字段从字符串解析成对象结构了。那么接下来，我们在解决之前遗留的第二个问题：对响应 `data` 字段的处理。

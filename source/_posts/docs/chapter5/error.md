@@ -1,3 +1,11 @@
+---
+layout: post
+title: 错误处理
+description: 在上一章节，我们实现了 `ts-axios` 的基础功能，但目前为止我们都是处理了正常接收请求的逻辑，并没有考虑到任何错误情况的处理，这对于一个程序的健壮性而言是远不够的，因此我们这一章需要对 AJAX 各种错误情况做处理。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 错误处理
 
 ## 需求分析
@@ -9,12 +17,14 @@
 ```typescript
 axios({
   method: 'get',
-  url: '/error/get'
-}).then((res) => {
-  console.log(res)
-}).catch((e) => {
-  console.log(e)
+  url: '/error/get',
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
 ```
 
 如果在请求的过程中发生任何错误，我们都可以在 `reject` 回调函数中捕获到。
@@ -29,8 +39,8 @@ axios({
 
 ```typescript
 request.onerror = function handleError() {
-  reject(new Error('Network Error'))
-}
+  reject(new Error('Network Error'));
+};
 ```
 
 ## 处理超时错误
@@ -42,22 +52,22 @@ request.onerror = function handleError() {
 ```typescript
 export interface AxiosRequestConfig {
   // ...
-  timeout?: number
+  timeout?: number;
 }
 ```
 
 接着在 `xhr` 函数中添加如下代码：
 
 ```typescript
-const { /*...*/ timeout } = config
+const { /*...*/ timeout } = config;
 
 if (timeout) {
-  request.timeout = timeout
+  request.timeout = timeout;
 }
 
 request.ontimeout = function handleTimeout() {
-  reject(new Error(`Timeout of ${timeout} ms exceeded`))
-}
+  reject(new Error(`Timeout of ${timeout} ms exceeded`));
+};
 ```
 
 ## 处理非 200 状态码
@@ -67,32 +77,34 @@ request.ontimeout = function handleTimeout() {
 ```typescript
 request.onreadystatechange = function handleLoad() {
   if (request.readyState !== 4) {
-    return
+    return;
   }
 
   if (request.status === 0) {
-    return
+    return;
   }
 
-  const responseHeaders = parseHeaders(request.getAllResponseHeaders())
+  const responseHeaders = parseHeaders(request.getAllResponseHeaders());
   const responseData =
-    responseType && responseType !== 'text' ? request.response : request.responseText
+    responseType && responseType !== 'text'
+      ? request.response
+      : request.responseText;
   const response: AxiosResponse = {
     data: responseData,
     status: request.status,
     statusText: request.statusText,
     headers: responseHeaders,
     config,
-    request
-  }
-  handleResponse(response)
-}
+    request,
+  };
+  handleResponse(response);
+};
 
 function handleResponse(response: AxiosResponse) {
   if (response.status >= 200 && response.status < 300) {
-    resolve(response)
+    resolve(response);
   } else {
-    reject(new Error(`Request failed with status code ${response.status}`))
+    reject(new Error(`Request failed with status code ${response.status}`));
   }
 }
 ```
@@ -109,7 +121,7 @@ function handleResponse(response: AxiosResponse) {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Error example</title>
   </head>
   <body>
@@ -121,69 +133,77 @@ function handleResponse(response: AxiosResponse) {
 接着创建 `app.ts` 作为入口文件：
 
 ```typescript
-import axios from '../../src/index'
+import axios from '../../src/index';
 
 axios({
   method: 'get',
-  url: '/error/get1'
-}).then((res) => {
-  console.log(res)
-}).catch((e) => {
-  console.log(e)
+  url: '/error/get1',
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
 
 axios({
   method: 'get',
-  url: '/error/get'
-}).then((res) => {
-  console.log(res)
-}).catch((e) => {
-  console.log(e)
+  url: '/error/get',
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
 
 setTimeout(() => {
   axios({
     method: 'get',
-    url: '/error/get'
-  }).then((res) => {
-    console.log(res)
-  }).catch((e) => {
-    console.log(e)
+    url: '/error/get',
   })
-}, 5000)
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((e) => {
+      console.log(e);
+    });
+}, 5000);
 
 axios({
   method: 'get',
   url: '/error/timeout',
-  timeout: 2000
-}).then((res) => {
-  console.log(res)
-}).catch((e) => {
-  console.log(e.message)
+  timeout: 2000,
 })
+  .then((res) => {
+    console.log(res);
+  })
+  .catch((e) => {
+    console.log(e.message);
+  });
 ```
 
 接着在 `server.js` 添加新的接口路由：
 
 ```typescript
-router.get('/error/get', function(req, res) {
+router.get('/error/get', function (req, res) {
   if (Math.random() > 0.5) {
     res.json({
-      msg: `hello world`
-    })
+      msg: `hello world`,
+    });
   } else {
-    res.status(500)
-    res.end()
+    res.status(500);
+    res.end();
   }
-})
+});
 
-router.get('/error/timeout', function(req, res) {
+router.get('/error/timeout', function (req, res) {
   setTimeout(() => {
     res.json({
-      msg: `hello world`
-    })
-  }, 3000)
-})
+      msg: `hello world`,
+    });
+  }, 3000);
+});
 ```
 
 然后在命令行运行 `npm run dev`，接着打开 chrome 浏览器，访问 `http://localhost:8080/` 即可访问我们的 demo 了，我们点到 `Error` 目录下，通过开发者工具的 network 部分我们可以看到不同的错误情况。

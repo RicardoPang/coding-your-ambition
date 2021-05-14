@@ -1,3 +1,11 @@
+---
+layout: post
+title: 处理请求 url 参数
+description: 我们希望最终请求的 `url` 是 `/base/get?a=1&b=2`，这样服务端就可以通过请求的 url 解析到我们传来的参数数据了。实际上就是把 `params` 对象的 key 和 value 拼接到 `url` 上。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 处理请求 url 参数
 
 ## 需求分析
@@ -10,9 +18,9 @@ axios({
   url: '/base/get',
   params: {
     a: 1,
-    b: 2
-  }
-})
+    b: 2,
+  },
+});
 ```
 
 我们希望最终请求的 `url` 是 `/base/get?a=1&b=2`，这样服务端就可以通过请求的 url 解析到我们传来的参数数据了。实际上就是把 `params` 对象的 key 和 value 拼接到 `url` 上。
@@ -26,9 +34,9 @@ axios({
   method: 'get',
   url: '/base/get',
   params: {
-    foo: ['bar', 'baz']
-  }
-})
+    foo: ['bar', 'baz'],
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo[]=bar&foo[]=baz'`。
@@ -41,10 +49,10 @@ axios({
   url: '/base/get',
   params: {
     foo: {
-      bar: 'baz'
-    }
-  }
-})
+      bar: 'baz',
+    },
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo=%7B%22bar%22:%22baz%22%7D`，`foo` 后面拼接的是 `{"bar":"baz"}` encode 后的结果。
@@ -52,15 +60,15 @@ axios({
 ### 参数值为 Date 类型
 
 ```typescript
-const date = new Date()
+const date = new Date();
 
 axios({
   method: 'get',
   url: '/base/get',
   params: {
-    date
-  }
-})
+    date,
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?date=2019-04-01T05:55:39.030Z`，`date` 后面拼接的是 `date.toISOString()` 的结果。
@@ -69,15 +77,14 @@ axios({
 
 对于字符 `@`、`:`、`$`、`,`、` `、`[`、`]`，我们是允许出现在 `url` 中的，不希望被 encode。
 
-
 ```typescript
 axios({
   method: 'get',
   url: '/base/get',
   params: {
-    foo: '@:$, '
-  }
-})
+    foo: '@:$, ',
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo=@:$+`，注意，我们会把空格 ` ` 转换成 `+`。
@@ -92,9 +99,9 @@ axios({
   url: '/base/get',
   params: {
     foo: 'bar',
-    baz: null
-  }
-})
+    baz: null,
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo=bar`。
@@ -106,9 +113,9 @@ axios({
   method: 'get',
   url: '/base/get#hash',
   params: {
-    foo: 'bar'
-  }
-})
+    foo: 'bar',
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo=bar`
@@ -120,13 +127,12 @@ axios({
   method: 'get',
   url: '/base/get?foo=bar',
   params: {
-    bar: 'baz'
-  }
-})
+    bar: 'baz',
+  },
+});
 ```
 
 最终请求的 `url` 是 `/base/get?foo=bar&bar=baz`
-
 
 ## buildURL 函数实现
 
@@ -135,9 +141,9 @@ axios({
 `helpers/url.ts`：
 
 ```typescript
-import { isDate, isObject } from './util'
+import { isDate, isObject } from './util';
 
-function encode (val: string): string {
+function encode(val: string): string {
   return encodeURIComponent(val)
     .replace(/%40/g, '@')
     .replace(/%3A/gi, ':')
@@ -145,66 +151,65 @@ function encode (val: string): string {
     .replace(/%2C/gi, ',')
     .replace(/%20/g, '+')
     .replace(/%5B/gi, '[')
-    .replace(/%5D/gi, ']')
+    .replace(/%5D/gi, ']');
 }
 
-export function bulidURL (url: string, params?: any) {
+export function bulidURL(url: string, params?: any) {
   if (!params) {
-    return url
+    return url;
   }
 
-  const parts: string[] = []
+  const parts: string[] = [];
 
   Object.keys(params).forEach((key) => {
-    let val = params[key]
+    let val = params[key];
     if (val === null || typeof val === 'undefined') {
-      return
+      return;
     }
-    let values: string[]
+    let values: string[];
     if (Array.isArray(val)) {
-      values = val
-      key += '[]'
+      values = val;
+      key += '[]';
     } else {
-      values = [val]
+      values = [val];
     }
     values.forEach((val) => {
       if (isDate(val)) {
-        val = val.toISOString()
+        val = val.toISOString();
       } else if (isObject(val)) {
-        val = JSON.stringify(val)
+        val = JSON.stringify(val);
       }
-      parts.push(`${encode(key)}=${encode(val)}`)
-    })
-  })
+      parts.push(`${encode(key)}=${encode(val)}`);
+    });
+  });
 
-  let serializedParams = parts.join('&')
+  let serializedParams = parts.join('&');
 
   if (serializedParams) {
-    const markIndex = url.indexOf('#')
+    const markIndex = url.indexOf('#');
     if (markIndex !== -1) {
-      url = url.slice(0, markIndex)
+      url = url.slice(0, markIndex);
     }
 
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
   }
 
-  return url
+  return url;
 }
 ```
 
 `helpers/util.ts`：
 
 ```typescript
-const toString = Object.prototype.toString
+const toString = Object.prototype.toString;
 
-export function isDate (val: any): val is Date {
-  return toString.call(val) === '[object Date]'
+export function isDate(val: any): val is Date {
+  return toString.call(val) === '[object Date]';
 }
 
-export function isObject (val: any): val is Object {
-  return val !== null && typeof val === 'object'
+export function isObject(val: any): val is Object {
+  return val !== null && typeof val === 'object';
 }
-
 ```
 
 ## 实现 url 参数处理逻辑
@@ -214,18 +219,18 @@ export function isObject (val: any): val is Object {
 在 `index.ts` 文件中添加如下代码：
 
 ```typescript
-function axios (config: AxiosRequestConfig): void {
-  processConfig(config)
-  xhr(config)
+function axios(config: AxiosRequestConfig): void {
+  processConfig(config);
+  xhr(config);
 }
 
-function processConfig (config: AxiosRequestConfig): void {
-  config.url = transformUrl(config)
+function processConfig(config: AxiosRequestConfig): void {
+  config.url = transformUrl(config);
 }
 
-function transformUrl (config: AxiosRequestConfig): string {
-  const { url, params } = config
-  return bulidURL(url, params)
+function transformUrl(config: AxiosRequestConfig): string {
+  const { url, params } = config;
+  return bulidURL(url, params);
 }
 ```
 
@@ -243,7 +248,7 @@ function transformUrl (config: AxiosRequestConfig): string {
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Base example</title>
   </head>
   <body>
@@ -255,76 +260,76 @@ function transformUrl (config: AxiosRequestConfig): string {
 接着创建 `app.ts` 作为入口文件：
 
 ```typescript
-import axios from '../../src/index'
+import axios from '../../src/index';
 
 axios({
   method: 'get',
   url: '/base/get',
   params: {
-    foo: ['bar', 'baz']
-  }
-})
+    foo: ['bar', 'baz'],
+  },
+});
 
 axios({
   method: 'get',
   url: '/base/get',
   params: {
     foo: {
-      bar: 'baz'
-    }
-  }
-})
+      bar: 'baz',
+    },
+  },
+});
 
-const date = new Date()
-
-axios({
-  method: 'get',
-  url: '/base/get',
-  params: {
-    date
-  }
-})
+const date = new Date();
 
 axios({
   method: 'get',
   url: '/base/get',
   params: {
-    foo: '@:$, '
-  }
-})
+    date,
+  },
+});
+
+axios({
+  method: 'get',
+  url: '/base/get',
+  params: {
+    foo: '@:$, ',
+  },
+});
 
 axios({
   method: 'get',
   url: '/base/get',
   params: {
     foo: 'bar',
-    baz: null
-  }
-})
+    baz: null,
+  },
+});
 
 axios({
   method: 'get',
   url: '/base/get#hash',
   params: {
-    foo: 'bar'
-  }
-})
+    foo: 'bar',
+  },
+});
 
 axios({
   method: 'get',
   url: '/base/get?foo=bar',
   params: {
-    bar: 'baz'
-  }
-})
+    bar: 'baz',
+  },
+});
 ```
 
 接着在 `server.js` 添加新的接口路由：
 
 ```typescript
-router.get('/base/get', function(req, res) {
-  res.json(req.query)
-})
+router.get('/base/get', function (req, res) {
+  res.json(req.query);
+});
 ```
 
 然后在命令行运行 `npm run dev`，接着打开 chrome 浏览器，访问 `http://localhost:8080/` 即可访问我们的 demo 了，我们点到 `Base` 目录下，通过开发者工具的 network 部分我们可以看到成功发送的多条请求，并可以观察它们最终请求的 url，已经如期添加了请求参数。

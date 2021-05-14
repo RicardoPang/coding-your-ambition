@@ -1,3 +1,11 @@
+---
+layout: post
+title: 处理请求 body 数据
+description: 我们通过执行 `XMLHttpRequest` 对象实例的 `send` 方法来发送请求，并通过该方法的参数设置请求 `body` 数据，我们可以去 [mdn](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/send) 查阅该方法支持的参数类型。
+tags: [TypeScript 学习]
+categories: [TypeScript 学习]
+---
+
 # 处理请求 body 数据
 
 ## 需求分析
@@ -12,11 +20,11 @@
 axios({
   method: 'post',
   url: '/base/post',
-  data: { 
+  data: {
     a: 1,
-    b: 2 
-  }
-})
+    b: 2,
+  },
+});
 ```
 
 这个时候 `data`是不能直接传给 `send` 函数的，我们需要把它转换成 JSON 字符串。
@@ -28,21 +36,21 @@ axios({
 `helpers/data.ts`：
 
 ```typescript
-import { isPlainObject } from './util'
+import { isPlainObject } from './util';
 
-export function transformRequest (data: any): any {
+export function transformRequest(data: any): any {
   if (isPlainObject(data)) {
-    return JSON.stringify(data)
+    return JSON.stringify(data);
   }
-  return data
+  return data;
 }
 ```
 
 `helpers/util.js`：
 
 ```typescript
-export function isPlainObject (val: any): val is Object {
-  return toString.call(val) === '[object Object]'
+export function isPlainObject(val: any): val is Object {
+  return toString.call(val) === '[object Object]';
 }
 ```
 
@@ -52,9 +60,9 @@ export function isPlainObject (val: any): val is Object {
 
 ```typescript
 if (isDate(val)) {
-  val = val.toISOString()
+  val = val.toISOString();
 } else if (isPlainObject(val)) {
-  val = JSON.stringify(val)
+  val = JSON.stringify(val);
 }
 ```
 
@@ -74,7 +82,7 @@ if (isDate(val)) {
 
 `index.ts`：
 
-```typescript
+````typescript
 import { transformRequest } from './helpers/data'
 
 ```typescript
@@ -86,7 +94,7 @@ function processConfig (config: AxiosRequestConfig): void {
 function transformRequestData (config: AxiosRequestConfig): any {
   return transformRequest(config.data)
 }
-```
+````
 
 我们定义了 `transformRequestData` 函数，去转换请求 `body` 的数据，内部调用了我们刚刚实现的的 `transformRequest` 方法。
 
@@ -100,38 +108,38 @@ axios({
   url: '/base/post',
   data: {
     a: 1,
-    b: 2
-  }
-})
+    b: 2,
+  },
+});
 
-const arr = new Int32Array([21, 31])
+const arr = new Int32Array([21, 31]);
 
 axios({
   method: 'post',
   url: '/base/buffer',
-  data: arr
-})
+  data: arr,
+});
 ```
 
 我们在 `examples/base/app.ts` 添加 2 段代码，第一个 post 请求的 `data` 是一个普通对象，第二个请求的 `data` 是一个 `Int32Array` 类型的数据，它是可以直接传给 `XMLHttpRequest` 对象的 `send` 方法的。
 
 ```javascript
-router.post('/base/post', function(req, res) {
-  res.json(req.body)
-})
+router.post('/base/post', function (req, res) {
+  res.json(req.body);
+});
 
-router.post('/base/buffer', function(req, res) {
-  let msg = []
+router.post('/base/buffer', function (req, res) {
+  let msg = [];
   req.on('data', (chunk) => {
     if (chunk) {
-      msg.push(chunk)
+      msg.push(chunk);
     }
-  })
+  });
   req.on('end', () => {
-    let buf = Buffer.concat(msg)
-    res.json(buf.toJSON())
-  })
-})
+    let buf = Buffer.concat(msg);
+    res.json(buf.toJSON());
+  });
+});
 ```
 
 我们接着在 `examples/server.js` 中添加 2 个路由，分别针对这俩种请求，返回请求传入的数据。
@@ -141,5 +149,3 @@ router.post('/base/buffer', function(req, res) {
 实际上是因为我们虽然执行 `send` 方法的时候把普通对象 `data` 转换成一个 `JSON` 字符串，但是我们请求`header` 的 `Content-Type` 是 `text/plain;charset=UTF-8`，导致了服务端接受到请求并不能正确解析请求 `body` 的数据。
 
 知道这个问题后，下面一节课我们来实现对请求 `header` 的处理。
-
-
