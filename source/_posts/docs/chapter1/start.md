@@ -1,7 +1,7 @@
 ---
 layout: post
-title: 安装 TypeScript
-description: 安装 TypeScript。
+title: 编写第一个 TypeScript 程序
+description: 在编辑器，将下面的代码输入到 greeter.ts 文件里：
 tags: [TypeScript 学习]
 categories: [TypeScript 学习]
 ---
