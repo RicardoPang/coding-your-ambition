@@ -3,6 +3,7 @@ title: lambda表达式
 date: 2021-01-11 21:29:02
 description: lambda 表达式。
 tags: Java
+categories: [其他]
 ---
 
 ### lambda 历史

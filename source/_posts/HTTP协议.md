@@ -3,6 +3,7 @@ title: HTTP协议
 date: 2021-01-11 21:27:17
 description: HTTP（Hyper Text Transfer Protocol）超文本传输协议是用于从服务器传输超文本到客户端的传输协议，基于 TCP/IP 通信协议，遵循客户端-服务器端模型。
 tags: HTTP
+categories: [其他]
 ---
 
 **概念：** HTTP（Hyper Text Transfer Protocol）超文本传输协议是用于从服务器传输超文本到客户端的传输协议，基于 TCP/IP 通信协议，遵循客户端-服务器端模型。
