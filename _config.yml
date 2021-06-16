@@ -110,5 +110,5 @@ theme: next
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: centos@3.143.232.153:/usr/local/hexoRepo/hexo
+  repo: git@3.143.232.153:/usr/local/hexoRepo/hexo
   branch: master
