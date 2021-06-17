@@ -1,10 +1,10 @@
+---
+layout: post
 title: Google V8
-date: 2021-06-17 15:36:51
-description: V8 是由 Google 开发的开源 JavaScript 引擎，也被称为虚拟机，模拟实际计算机各种功能来实现代码的编译和执行。
-tags: Google V8
+description:  V8 是由 Google 开发的开源 JavaScript 引擎，也被称为虚拟机，模拟实际计算机各种功能来实现代码的编译和执行。
+tags: [Google V8]
 categories: [V8]
-
-[TOC]
+---
 
 ## 开篇词：如何学习V8
 
